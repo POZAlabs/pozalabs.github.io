@@ -52,10 +52,10 @@ medium: medium
 email: poza.labs@gmail.com
 
 authors:
-    POZA LABS:
-        name: POZA LABS
+    hyerim:
+        name: Hyerim Kim
         bio: A team for deep learning
-        external-image: false
+        external-image: True
         picture: assets/images/profile.jpg
         twitter: None
     
