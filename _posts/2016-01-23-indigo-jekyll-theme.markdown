@@ -1,5 +1,5 @@
 ---
-title: ":ramen: 1 프로젝트"
+title: " 1st 프로젝트 : Kaggle Instacart"
 layout: post
 date: 2016-01-23 22:10
 tag: jekyll
