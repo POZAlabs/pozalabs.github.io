@@ -13,10 +13,8 @@ p>
 <ul class="skill-list">
 	<li>Python</li>
 	<li>Tensorflow</li>
-	<li>CSS (Stylus, Sass, Less)</li>
 	<li>Git</li>
 	<li>Python</li>
-	<li>MySQL - MongoDB</li>
 </ul>
 
 <h2>Projects</h2>
