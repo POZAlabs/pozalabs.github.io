@@ -16,7 +16,7 @@ resume: true
 resume-external: true
 resume-url: https://google.com/?q=my+resume
 
-url: https://koppl.in/indigo
+url: https://pozalabs.github.io
 # your url: http://USERNAME.github.io
 
 permalink: /:title/
@@ -49,21 +49,21 @@ github: mygithub
 # reddit: username
 medium: medium
 # vimeo: myvimeo
-email: myemail@gmail.com
+email: poza.labs@gmail.com
 
 authors:
     johndoe:
-        name: John Doe
-        bio: A Man who travels the world eating noodles
+        name: POZA LABS
+        bio: A team for deep learning
         external-image: false
         picture: assets/images/profile.jpg
-        twitter: johndoe
+        twitter: None
     jamesfoster:
         name: James Foster
         bio: A Man who develops software with coffee
         external-image: false
         picture: assets/images/james.jpg
-        twitter: jamesfoster
+        twitter: None
 
 # do you want a larger site? change the option below
 # options: [normal, large] | default: normal
