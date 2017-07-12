@@ -55,7 +55,7 @@ authors:
     hyerim:
         name: Hyerim Kim
         bio: A team for deep learning
-        external-image: True
+        external-image: False
         picture: assets/images/profile.jpg
         twitter: None
     
