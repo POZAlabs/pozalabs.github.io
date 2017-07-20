@@ -10,7 +10,7 @@ tag:
 - tensorflow
 //star: true
 category: blog
-author: hyerim
+author: hyunho
 description: Single Layer Perceptron summary
 ---
 
