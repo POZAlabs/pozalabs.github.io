@@ -26,11 +26,11 @@ description: Single Layer Perceptron summary
 
 이처럼 input에 weight가 곱해진 형태가 정해진(혹은 학습된) 임계치를 넘을 경우 1을 출력하고 그렇지 않을 경우 0을 출력하게 하는 것이 퍼셉트론의 동작 원리입니다. 정말 간단하죠! 이는 아래 수식과 같습니다.
 
-![식1](/assets/images/single_layer_perceptron/식_1.jpg)
+![formula1](/assets/images/single_layer_perceptron/formula_1.jpg)
 
 하지만 임계치를 그때그때 바꿔주는 것은 조금 직관적이지 않습니다(저만 그런가요). 그래서 우리는 아래 형태로 식을 바꾸게 되며, 이 때 추가된 b를 bias 혹은 절편이라고 말합니다. 
 
-![식2](/assets/images/single_layer_perceptron/식_2.jpg)
+![formula2](/assets/images/single_layer_perceptron/formula_2.jpg)
 ![graph_3.jpg](/assets/images/single_layer_perceptron/graph_3.jpg)
 
 위 식은 여러분이 중고등학교 수학 수업을 잘 들었다면 굉장히 익숙한 형태일 것입니다. 바로 2차원 좌표축을 그리고 직선을 그었을 때, 그 직선을 기준으로 나뉘는 두 개의 공간을 표현한 식입니다. 역시 말보다는 그림이 이해하기 쉬울테니, 아래에 그림을 그려보도록 하겠습니다.
