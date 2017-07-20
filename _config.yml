@@ -58,6 +58,13 @@ authors:
         external-image: False
         picture: assets/images/profile.jpg
         twitter: None
+ 
+     hyunho:
+        name: Hyunho Cho
+        bio: A team for deep learning
+        external-image: False
+        picture: assets/images/profile.jpg
+        twitter: None
     
 
 # do you want a larger site? change the option below
