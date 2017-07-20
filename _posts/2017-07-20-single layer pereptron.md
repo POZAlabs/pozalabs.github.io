@@ -1,3 +1,18 @@
+---
+title: "Single Layer Perceptron"
+layout: post
+date: 2017-07-20
+image: /assets/images/single_layer_perceptron/graph_3.jpg
+headerImage: False
+tag:
+- Perceptron
+- MLP
+- tensorflow
+//star: true
+category: blog
+author: hyerim
+description: Single Layer Perceptron summary
+---
 
 # Single Layer Perceptron
 
