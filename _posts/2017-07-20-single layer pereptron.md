@@ -26,7 +26,7 @@ description: Single Layer Perceptron summary
 
 이처럼 input에 weight가 곱해진 형태가 정해진(혹은 학습된) 임계치를 넘을 경우 1을 출력하고 그렇지 않을 경우 0을 출력하게 하는 것이 퍼셉트론의 동작 원리입니다. 정말 간단하죠! 이는 아래 수식과 같습니다.
 
-![식1](assets/images/single_layer_perceptron/식_1.jpg)
+![식1](assets/images/BLSTM.PNG)
 
 하지만 임계치를 그때그때 바꿔주는 것은 조금 직관적이지 않습니다(저만 그런가요). 그래서 우리는 아래 형태로 식을 바꾸게 되며, 이 때 추가된 b를 bias 혹은 절편이라고 말합니다. 
 
