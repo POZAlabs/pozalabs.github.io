@@ -110,4 +110,4 @@ jekyll-mentions:
     base_url: https://github.com
     
 google-analytics:
-  id: UA-103074382-1
+  id: "UA-103074382-1"
