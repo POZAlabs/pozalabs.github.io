@@ -13,8 +13,9 @@ author: hyemi
 description: Transformer paper review
 ---
 
-이번 포스팅에서는 포자랩스에서 핵심적으로 쓰고 있는 모델인 **transformer**의 논문을 요약하고 설명하면서 추가적인 기법들도 말씀드리겠습니다. 
+이번 포스팅에서는 포자랩스에서 핵심적으로 쓰고 있는 모델인 **transformer**의 논문을 요약하면서 추가적인 기법들도 설명드리겠습니다. 
 
+​
 
 # Why? 
 
@@ -26,16 +27,14 @@ description: Transformer paper review
 - recurrent model은 순차적인 특성이 유지되는 뛰어난 장점이 있었음에도, long-term dependency problem이라는 단점을 가지고 있었습니다.
 - 이와 달리 transformer는 recurrence를 사용하지 않고 대신 **attention mechanism**만을 사용해 input과 output의 dependency를 포착해냈습니다.
 
-
+​
 
 ## Parallelization
 
 - recurrent model은 학습 시, t번째 hidden state를 얻기 위해서 t-1번째 hidden state가 필요했습니다. 즉, 순서대로 계산될 필요가 있었습니다. 그래서 병렬 처리를 할 수 없었고 계산 속도가 느렸습니다.
 - 하지만 transformer에서는 학습 시 encoder에서는 각각의 position에 대해, 즉 각각의 단어에 대해 attention을 해주기만 하고, decoder에서는 masking 기법을 이용해 병렬 처리가 가능하게 됩니다. (masking이 어떤 것인지는 이후에 설명해 드리겠습니다)
 
-
-
-
+​
 
 # Model Architecture 
 
@@ -46,6 +45,8 @@ description: Transformer paper review
 - encoder는 input sequence $$(x_1, ..., x_n)$$에 대해 다른 representation인 $$z = (z_1, ..., z_n)$$으로 바꿔줍니다.
 - decoder는 **z**를 받아, output sequence $$(y_1, ... , y_n)$$를 하나씩 만들어냅니다.
 - 각각의 step에서 다음 symbol을 만들 때 이전에 만들어진 output(symbol)을 이용합니다. 예를 들어, "저는 사람입니다."라는 문장에서 '사람입니다'를 만들 때, '저는'이라는 symbol을 이용하는 거죠. 이런 특성을 *auto-regressive* 하다고 합니다.
+
+​
 
 ## Encoder and Decoder stacks
 
@@ -68,12 +69,14 @@ description: Transformer paper review
 
 - 위의 예시를 보면, **a**를 예측할 때는 **a**이후에 있는 **b,c**에는 attention이 주어지지 않는 것입니다. 그리고 **b**를 예측할 때는 **b**이전에 있는 **a**만 attention이 주어질 수 있고 이후에 있는 **c**는 attention이 주어지지 않는 것이죠.
 
+​
 
 ## Embeddings and Softmax
 
 -  embedding 값을 고정시키지 않고, 학습을 하면서 embedding값이 변경되는 learned embedding을 사용했습니다. 이때 input과 output은 같은 embedding layer를 사용합니다. 
 -  또한 decoder output을 다음 token의 확률로 바꾸기 위해 learned linear transformation과 softmax function을 사용했습니다. learned linear transformation을 사용했다는 것은 decoder output에 weight matrix $$W$$를 곱해주는데, 이때 $$W$$가 학습된다는 것입니다.
 
+​
 
 ## Attention
 
@@ -111,7 +114,6 @@ $$
 
 
 ![multi-head](/assets/images/multi head.png)
-
 
 
 - $$d_{model}$$ dimension의 key, value, query들로 하나의 attention을 수행하는 대신 key, value, query들에 각각 다른 학습된 linear projection을 h번 수행하는 게 더 좋다고 합니다. 즉, 동일한 $$Q, K, V$$에 각각 다른 weight matrix $$W$$를 곱해주는 것이죠. 이때 parameter matrix는 $$W_i^Q \in \mathbb{R}^{d_{model} \mathsf{x} d_k}, W_i^K \in \mathbb{R}^{d_{model} \mathsf{x} d_k}, W_i^V \in \mathbb{R}^{d_{model} \mathsf{x} d_v}, W_i^O \in \mathbb{R}^{hd_ v\mathsf{x} d_{model}}$$ 입니다.
@@ -172,6 +174,8 @@ $$
 - 이때 각각의 position마다 같은 parameter $$W, b$$를 사용하지만, layer가 달라지면 다른 parameter를 사용합니다.
 - kernel size가 1이고 channel이 layer인 convolution을 두 번 수행한 것으로도 위 과정을 이해할 수 있습니다. 
 
+​
+
 ## Positional Encoding
 
 - transfomer는 recurrence도 아니고 convolution도 아니기 때문에, 단어의sequence를 이용하기 위해서는 단어의 position에 대한 정보를 추가해줄 필요가 있었습니다.
@@ -220,7 +224,7 @@ $$
 - 이런 성질 때문에 model이 relative position에 의해 attention하는 것을 더 쉽게 배울 수 있습니다.
 - 논문에서는 학습된 positional embedding 대신 sinusoidal version을 선택했습니다.  만약 학습된 positional embedding을 사용할 경우 training보다 더 긴 sequence가 inference시에 입력으로 들어온다면 문제가 되지만 sinusoidal의 경우 constant하기 때문에 문제가 되지 않습니다. 그냥 좀 더 많은 값을 계산하기만 하면 되는거죠.
 
-
+​
 
 # Training
 
@@ -240,6 +244,7 @@ $$
 - $$warmup\_step$$까지는 linear하게 learning rate를 증가시키다가, $$warmup\_step$$ 이후에는 $$step\_num$$의 inverse square root에 비례하도록 감소시킵니다. 
 - 이렇게 하는 이유는 처음에는 학습이 잘 되지 않은 상태이므로 learning rate를 빠르게 증가시켜 변화를 크게 주다가, 학습이 꽤 됐을 시점에 learning rate를 천천히 감소시켜 변화를 작게 주기 위해서입니다. 
 
+​
 
 ## Regularization
 
@@ -278,7 +283,6 @@ $$
 
 - 이때, $$\frac{\sigma\epsilon}{\sigma x_L}$$은 상위 layer의 gradient 값이 변하지 않고 그대로 하위 layer에 전달되는 것을 보여줍니다. 즉, layer를 거칠수록 gradient가 사라지는 vanishing gradient 문제를 완화해주는 것입니다.
 - 또한 forward path나 backward path를 간단하게 표현할 수 있게 됩니다.
-
 
 
 ### Layer Normalization
@@ -326,14 +330,14 @@ $$
 
 - 각각 label에 대한 분포 $$u(k)$$, smooting parameter $$\epsilon$$입니다. 위와 같다면, k=y인 경우에도 model은 $$p(y|x)=1$$이 아니라 $$p(y|x)=(1-\epsilon)$$이 되겠죠. 100%의 확신이 아닌 그보다 덜한 확신을 하게 되는 것입니다.
 
-
+​
 
 # Conclusion
 
 - transformer는 recurrence를 이용하지 않고도 빠르고 정확하게 sequential data를 처리할 수 있는 model로 제시되었습니다. 
 - 여러가지 기법이 사용됐지만, 가장 핵심적인 것은 encoder와 decoder에서 attention을 통해 query와 가장 밀접한 연관성을 가지는 value를 강조할 수 있고 병렬화가 가능해진 것입니다. 
 
-
+​
 
 ## Reference
 
