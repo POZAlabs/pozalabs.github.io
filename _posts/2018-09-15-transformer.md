@@ -43,7 +43,7 @@ description: Transformer paper review
 
 ![Imgur](https://i.imgur.com/yPep7h9.png)
 
-- encoder는 input sequence $(x_1, ..., x_n)$에 대해 다른 representation인 $z = (z_1, ..., z_n)$으로 바꿔줍니다.
+- encoder는 input sequence $$(x_1, ..., x_n)$$에 대해 다른 representation인 $$z = (z_1, ..., z_n)$$으로 바꿔줍니다.
 - decoder는 **z**를 받아, output sequence $(y_1, ... , y_n)$를 하나씩 만들어냅니다.
 - 각각의 step에서 다음 symbol을 만들 때 이전에 만들어진 output(symbol)을 이용합니다. 예를 들어, "저는 사람입니다."라는 문장에서 '사람입니다'를 만들 때, '저는'이라는 symbol을 이용하는 거죠. 이런 특성을 *auto-regressive* 하다고 합니다.
 
@@ -53,9 +53,9 @@ description: Transformer paper review
 
 ### Encoder
 
-- N개의 동일한 layer로 구성돼 있습니다. input $x$가 첫 번째 layer에 들어가게 되고, $layer(x)$가  다시 layer에 들어가는 식입니다.
+- N개의 동일한 layer로 구성돼 있습니다. input $x$가 첫 번째 layer에 들어가게 되고, $$layer(x)$$가  다시 layer에 들어가는 식입니다.
 - 그리고 각각의 layer는 두 개의 sub-layer, **multi-head self-attention mechanism**과 **position-wise fully connected feed-forward network**를 가지고 있습니다.
-- 이때 두 개의 sub-layer에 **residual connection**을 이용합니다. residual connection은 input을 output으로 그대로 전달하는 것을 말합니다. 이때 sub-layer의 output dimension을 embedding dimension과 맞춰줍니다. $x+Sublayer(x)$를 하기 위해서, 즉 residual connection을 하기 위해서는 두 값의 차원을 맞춰줄 필요가 있습니다. 그 후에 **layer normalization**을 적용합니다. 
+- 이때 두 개의 sub-layer에 **residual connection**을 이용합니다. residual connection은 input을 output으로 그대로 전달하는 것을 말합니다. 이때 sub-layer의 output dimension을 embedding dimension과 맞춰줍니다. $$x+Sublayer(x)$$를 하기 위해서, 즉 residual connection을 하기 위해서는 두 값의 차원을 맞춰줄 필요가 있습니다. 그 후에 **layer normalization**을 적용합니다. 
 
 
 
@@ -67,7 +67,7 @@ description: Transformer paper review
 
 - 마찬가지로 sub-layer에 **residual connection**을 사용한 뒤, **layer normalization**을 해줍니다.
 
-- decoder에서는 encoder와 달리 *순차적으로* 결과를 만들어내야 하기 때문에, self-attention을 변형합니다. 바로 **masking**을 해주는 것이죠. masking을 통해, position $i$ 보다 이후에 있는 position에 attention을 주지 못하게 합니다. 즉, position $i$에 대한 예측은 미리 알고 있는 output들에만 의존을 하는 것입니다. 
+- decoder에서는 encoder와 달리 *순차적으로* 결과를 만들어내야 하기 때문에, self-attention을 변형합니다. 바로 **masking**을 해주는 것이죠. masking을 통해, position $$i$$ 보다 이후에 있는 position에 attention을 주지 못하게 합니다. 즉, position $$i$$에 대한 예측은 미리 알고 있는 output들에만 의존을 하는 것입니다. 
 
   ​
 
@@ -81,7 +81,7 @@ description: Transformer paper review
 ## Embeddings and Softmax
 
 -  embedding 값을 고정시키지 않고, 학습을 하면서 embedding값이 변경되는 learned embedding을 사용했습니다. 이때 input과 output은 같은 embedding layer를 사용합니다. 
--  또한 decoder output을 다음 token의 확률로 바꾸기 위해 learned linear transformation과 softmax function을 사용했습니다. learned linear transformation을 사용했다는 것은 decoder output에 weight matrix $W$를 곱해주는데, 이때 $W$가 학습된다는 것입니다.
+-  또한 decoder output을 다음 token의 확률로 바꾸기 위해 learned linear transformation과 softmax function을 사용했습니다. learned linear transformation을 사용했다는 것은 decoder output에 weight matrix $$W$$를 곱해주는데, 이때 $$W$$가 학습된다는 것입니다.
 
 ## Attention
 
@@ -99,9 +99,9 @@ $$
 Attention(Q, K, V) = softmax(\frac{QK^T}{\sqrt{d_k}})V
 $$
 
-- 먼저 input은 $d_k$ dimension의 query와 key들, $d_v$ dimension의 value들로 이루어져 있습니다. 
-- 이때 모든 query와 key에 대한 dot-product를 계산하고 각각을 $\sqrt{d_k}$로 나누어줍니다. *dot-product*를 하고  $\sqrt{d_k}$로 scaling을 해주기 때문에 **Scaled Dot-Product Attention**인 것입니다. 그리고 여기에 softmax를 적용해 value들에 대한 weights를 얻어냅니다. 
-- key와 value는 attention이 이루어지는 위치에 상관없이 같은 값을 갖게 됩니다. 이때 query와 key에 대한 dot-product를 계산하면 각각의 query와 key 사이의 **유사도**를 구할 수 있게 됩니다. 흔히 들어본 cosine similarity는 dot-product에서 vector의 magnitude로 나눈 것입니다.  $\sqrt{d_k}$로 scaling을 해주는 이유는 dot-products의 값이 커질수록 softmax 함수에서 기울기의 변화가 거의 없는 부분으로 가기 때문입니다.
+- 먼저 input은 $$d_k$$ dimension의 query와 key들, $$d_v$$ dimension의 value들로 이루어져 있습니다. 
+- 이때 모든 query와 key에 대한 dot-product를 계산하고 각각을 $$\sqrt{d_k}$$로 나누어줍니다. *dot-product*를 하고  $$\sqrt{d_k}$$로 scaling을 해주기 때문에 **Scaled Dot-Product Attention**인 것입니다. 그리고 여기에 softmax를 적용해 value들에 대한 weights를 얻어냅니다. 
+- key와 value는 attention이 이루어지는 위치에 상관없이 같은 값을 갖게 됩니다. 이때 query와 key에 대한 dot-product를 계산하면 각각의 query와 key 사이의 **유사도**를 구할 수 있게 됩니다. 흔히 들어본 cosine similarity는 dot-product에서 vector의 magnitude로 나눈 것입니다.  $$\sqrt{d_k}$$로 scaling을 해주는 이유는 dot-products의 값이 커질수록 softmax 함수에서 기울기의 변화가 거의 없는 부분으로 가기 때문입니다.
 - softmax를 거친 값을 value에 곱해준다면, query와 유사한 value일수록, 즉 중요한 value일수록 더 높은 값을 가지게 됩니다. 중요한 정보에 더 관심을 둔다는 attention의 원리에 알맞은 것입니다.
 
 ### Multi-Head Attention
@@ -114,7 +114,7 @@ $$
 MultiHead(Q, K, V) = Concat(head_1,...,head_h)W^O
 $$
 
-​								where $head_i=Attention(QW_i^Q, KW_i^K, VW_i^V)$
+​								where $$head_i=Attention(QW_i^Q, KW_i^K, VW_i^V)$$
 
 
 
@@ -122,15 +122,15 @@ $$
 
 
 
-- $d_{model}$ dimension의 key, value, query들로 하나의 attention을 수행하는 대신 key, value, query들에 각각 다른 학습된 linear projection을 h번 수행하는 게 더 좋다고 합니다. 즉, 동일한 $Q, K, V$에 각각 다른 weight matrix $W$를 곱해주는 것이죠. 이때 parameter matrix는 $W_i^Q \in \mathbb{R}^{d_{model} \mathsf{x} d_k}, W_i^K \in \mathbb{R}^{d_{model} \mathsf{x} d_k}, W_i^V \in \mathbb{R}^{d_{model} \mathsf{x} d_v}, W_i^O \in \mathbb{R}^{hd_ v\mathsf{x} d_{model}}$ 입니다.
-- 순서대로 query, key, value, output에 대한 parameter matrix입니다. projection이라고 하는 이유는 각각의 값들이 parameter matrix와 곱해졌을 때 $d_k, d_v, d_{model}$차원으로 project되기 때문입니다. 논문에서는 $d_k=d_v=d_{model}/h$를 사용했는데 꼭 $d_k$와 $d_v$가 같을 필요는 없습니다.
-- 이렇게 project된 key, value, query들은 병렬적으로 attention function을 거쳐 $d_v$ dimension output 값으로 나오게 됩니다.
-- 그 다음 여러 개의 $head$를 concatenate하고 다시 projection을 수행합니다. 그래서 최종적인 $d_{model}$ dimension output 값이 나오게 되는거죠.
+- $$d_{model}$$ dimension의 key, value, query들로 하나의 attention을 수행하는 대신 key, value, query들에 각각 다른 학습된 linear projection을 h번 수행하는 게 더 좋다고 합니다. 즉, 동일한 $$Q, K, V$$에 각각 다른 weight matrix $$W$$를 곱해주는 것이죠. 이때 parameter matrix는 $$W_i^Q \in \mathbb{R}^{d_{model} \mathsf{x} d_k}, W_i^K \in \mathbb{R}^{d_{model} \mathsf{x} d_k}, W_i^V \in \mathbb{R}^{d_{model} \mathsf{x} d_v}, W_i^O \in \mathbb{R}^{hd_ v\mathsf{x} d_{model}}$$ 입니다.
+- 순서대로 query, key, value, output에 대한 parameter matrix입니다. projection이라고 하는 이유는 각각의 값들이 parameter matrix와 곱해졌을 때 $$d_k, d_v, d_{model}$$차원으로 project되기 때문입니다. 논문에서는 $$d_k=d_v=d_{model}/h$$를 사용했는데 꼭 $$d_k$$와 $$d_v$$가 같을 필요는 없습니다.
+- 이렇게 project된 key, value, query들은 병렬적으로 attention function을 거쳐 $$d_v$$ dimension output 값으로 나오게 됩니다.
+- 그 다음 여러 개의 $$head$$를 concatenate하고 다시 projection을 수행합니다. 그래서 최종적인 $$d_{model}$$ dimension output 값이 나오게 되는거죠.
 - 각각의 과정에서 dimension을 표현하면 아래와 같습니다.
 
 ![Imgur](https://i.imgur.com/t1mrAtL.png)
 
-​			*$d_Q,d_K,d_V$는 각각 query, key, value 개수
+​			*$$d_Q,d_K,d_V$$는 각각 query, key, value 개수
 
 ### Self-Attention 
 
@@ -144,8 +144,8 @@ $$
 
 ![Imgur](https://i.imgur.com/CL80irE.png)
 
-- encoder와 비슷하게 decoder에서도 self-attention을 줄 수 있습니다. 하지만 $i$번째 output을 다시 $i+1$번째 input으로 사용하는 **auto-regressive**한 특성을 유지하기 위해 , **masking out**된 scaled dot-product attention을 적용했습니다.
-- masking out이 됐다는 것은 $i$번째 position에 대한 attention을 얻을 때, $i$번째 이후에 있는 모든 position은 $Attention(Q, K, V) = softmax(\frac{QK^T}{\sqrt{d_k}})V$에서 softmax의 input 값을 $-\infty$로 설정한 것입니다. 이렇게 한다면, $i$번째 이후에 있는 position에 attention을 주는 경우가 없겠죠.
+- encoder와 비슷하게 decoder에서도 self-attention을 줄 수 있습니다. 하지만 $$i$$번째 output을 다시 $$i+1$$번째 input으로 사용하는 **auto-regressive**한 특성을 유지하기 위해 , **masking out**된 scaled dot-product attention을 적용했습니다.
+- masking out이 됐다는 것은 $$i$$번째 position에 대한 attention을 얻을 때, $i$번째 이후에 있는 모든 position은 $$Attention(Q, K, V) = softmax(\frac{QK^T}{\sqrt{d_k}})V$$에서 softmax의 input 값을 $$-\infty$$로 설정한 것입니다. 이렇게 한다면, $$i$$번째 이후에 있는 position에 attention을 주는 경우가 없겠죠.
 
 ### Encoder-Decoder Attention Layer
 
@@ -177,8 +177,8 @@ $$
 
 
 
-- $x$에 linear transformation을 적용한 뒤, ReLU$(max(0, z))$를 거쳐 다시 한번 linear transformation을 적용합니다.
-- 이때 각각의 position마다 같은 parameter $W, b$를 사용하지만, layer가 달라지면 다른 parameter를 사용합니다.
+- $$x$$에 linear transformation을 적용한 뒤, ReLU$$(max(0, z))$$를 거쳐 다시 한번 linear transformation을 적용합니다.
+- 이때 각각의 position마다 같은 parameter $$W, b$$를 사용하지만, layer가 달라지면 다른 parameter를 사용합니다.
 - kernel size가 1이고 channel이 layer인 convolution을 두 번 수행한 것으로도 위 과정을 이해할 수 있습니다. 
 
 ## Positional Encoding
@@ -187,7 +187,7 @@ $$
 
 - 그래서 encoder와 decoder의 input embedding에 **positional encoding**을 더해줬습니다.
 
-- positional encoding은 $d_{model}$(embedding 차원)과 같은 차원을 갖기 때문에 positional encoding vector와 embedding vector는 더해질 수 있습니다.
+- positional encoding은 $$d_{model}$$(embedding 차원)과 같은 차원을 갖기 때문에 positional encoding vector와 embedding vector는 더해질 수 있습니다.
 
 - 논문에서는 다른 *frequency를 가지는 sine과 cosine 함수를 이용했습니다. 
 
@@ -201,14 +201,14 @@ $$
 PE_{(pos, 2i+1)}=cos(pos/10000^{2i/d_{model}})
 $$
 
-- $pos$는 position ,$i$는 dimension 이고 주기가 $10000^{2i/d_{model}}\cdot2\pi$인 삼각 함수입니다. 즉, $pos$는 sequence에서 단어의 위치이고 해당 단어는 $i$에 0부터 $\frac{d_{model}}{2}$까지를 대입해 $d_{model}$차원의 positional encoding vector를 얻게 됩니다. $k=2i+1$일 때는 cosine 함수를, $k=2i$일 때는 sine 함수를 이용합니다. 이렇게 positional encoding vector를 $pos$마다 구한다면  비록 같은 column이라고 할지라도 $pos$가 다르다면 다른 값을 가지게 됩니다. 즉, $pos$마다 다른 $pos$와 구분되는 positional encoding 값을 얻게 되는 것입니다.
+- $$pos$$는 position ,$$i$$는 dimension 이고 주기가 $$10000^{2i/d_{model}}\cdot2\pi$$인 삼각 함수입니다. 즉, $$pos$$는 sequence에서 단어의 위치이고 해당 단어는 $$i$$에 0부터 $$\frac{d_{model}}{2}$$까지를 대입해 $$d_{model}$$차원의 positional encoding vector를 얻게 됩니다. $$k=2i+1$$일 때는 cosine 함수를, $$k=2i$$일 때는 sine 함수를 이용합니다. 이렇게 positional encoding vector를 $$pos$$마다 구한다면 비록 같은 column이라고 할지라도 $$pos$$가 다르다면 다른 값을 가지게 됩니다. 즉, $$pos$$마다 다른 $$pos$$와 구분되는 positional encoding 값을 얻게 되는 것입니다.
 
 
 $$
 PE_{pos}=[cos(pos/1), sin(pos/10000^{2/d_{model}}),cos(pos/10000)^{2/d_{model}},...,sin(pos/10000)]
 $$
 
-- 이때 $PE_{pos+k}$는 $PE_{pos}$의 linear function으로 나타낼 수 있습니다. 표기를 간단히 하기 위해 $c=10000^{\frac{2i}{d_{model}}}$라고 해봅시다. $sin(a+b)=sin(a)cos(b)+cos(a)sin(b)$이고 $cos(a + b) = cos (a )cos (b) − sin(a) sin (b)$ 이므로 다음이 성립합니다.
+- 이때 $$PE_{pos+k}$$는 $$PE_{pos}$$의 linear function으로 나타낼 수 있습니다. 표기를 간단히 하기 위해 $$c=10000^{\frac{2i}{d_{model}}}$$라고 해봅시다. $$sin(a+b)=sin(a)cos(b)+cos(a)sin(b)$$이고 $$cos(a + b) = cos (a )cos (b) − sin(a) sin (b)$$ 이므로 다음이 성립합니다.
 
   
   $$
@@ -249,7 +249,7 @@ $$
 
 ![Imgur](https://i.imgur.com/IgC6BR6.png)
 
-- $warmup\_step$까지는 linear하게 learning rate를 증가시키다가, $warmup\_step$ 이후에는 $step\_num$의 inverse square root에 비례하도록 감소시킵니다. 
+- $$warmup\_step$$까지는 linear하게 learning rate를 증가시키다가, $$warmup\_step$$ 이후에는 $$step\_num$$의 inverse square root에 비례하도록 감소시킵니다. 
 - 이렇게 하는 이유는 처음에는 학습이 잘 되지 않은 상태이므로 learning rate를 빠르게 증가시켜 변화를 크게 주다가, 학습이 꽤 됐을 시점에 learning rate를 천천히 감소시켜 변화를 작게 주기 위해서입니다. 
 
 ## Regularization
@@ -266,8 +266,8 @@ $$
 x_{l+1} = f(y_l)
 $$
 
-- 이때 $h(x_l)=x_l$입니다. 논문 제목에서 나온 것처럼 identity mapping을 해주는 것이죠. 
-- 특정한 위치에서의 $x_L$을 다음과 같이 $x_l$과 residual 함수의 합으로 표시할 수 있습니다.
+- 이때 $$h(x_l)=x_l$$입니다. 논문 제목에서 나온 것처럼 identity mapping을 해주는 것이죠. 
+- 특정한 위치에서의 $$x_L$$을 다음과 같이 $$x_l$$과 residual 함수의 합으로 표시할 수 있습니다.
 
 $$
 x_2 =x_1+F(x_1,W_1)
@@ -287,7 +287,7 @@ $$
 \frac{\sigma\epsilon}{\sigma x_l}= \frac{\sigma\epsilon}{\sigma x_L} \frac{\sigma x_L}{\sigma x_l} = \frac{\sigma\epsilon}{\sigma x_L} (1+\frac{\sigma}{\sigma x_l}\sum^{L-1}_{i=1} F(x_i, W_i))
 $$
 
-- 이때, $ \frac{\sigma\epsilon}{\sigma x_L} $은 상위 layer의 gradient 값이 변하지 않고 그대로 하위 layer에 전달되는 것을 보여줍니다. 즉, layer를 거칠수록 gradient가 사라지는 vanishing gradient 문제를 완화해주는 것입니다.
+- 이때, $$\frac{\sigma\epsilon}{\sigma x_L}$$은 상위 layer의 gradient 값이 변하지 않고 그대로 하위 layer에 전달되는 것을 보여줍니다. 즉, layer를 거칠수록 gradient가 사라지는 vanishing gradient 문제를 완화해주는 것입니다.
 - 또한 forward path나 backward path를 간단하게 표현할 수 있게 됩니다.
 
 
@@ -304,8 +304,8 @@ $$
 \sigma^l = \sqrt{\frac{1}{H}\sum_{i=1}^H(a^l_i-\mu^l)^2}
 $$
 
-- 같은 layer에 있는 모든 hidden unit은 동일한 $\mu$와 $\sigma$를 공유합니다. 
-- 그리고 현재 input $x^t$, 이전의 hidden state $h^{t-1}$, $a^t = W_{hh}h^{t-1}+W_{xh}x^t$, parameter $g, b$가 있을 때 다음과 같이 normalization을 해줍니다.
+- 같은 layer에 있는 모든 hidden unit은 동일한 $$\mu$$와 $$\sigma$$를 공유합니다. 
+- 그리고 현재 input $$x^t$$, 이전의 hidden state $$h^{t-1}$$, $$a^t = W_{hh}h^{t-1}+W_{xh}x^t$$, parameter $$g, b$$가 있을 때 다음과 같이 normalization을 해줍니다.
 
 $$
 h^t = f[\frac{g}{\sigma^t}\odot(a^t-\mu^t)+b]
@@ -328,14 +328,14 @@ $$
 ### Label Smoothing
 
 - [Rethinking the inception architecture for computer vision](https://arxiv.org/pdf/1512.00567.pdf)라는 논문에서 제시된 방법입니다.
-- training동안 실제 정답인 label의 logit은 다른 logit보다 훨씬 큰 값을 갖게 됩니다. 이렇게 해서 model이 주어진 input $x$에 대한 label $y$를 맞추는 것이죠. 하지만 이렇게 된다면 문제가 발생합니다. overfitting될 수도 있고 가장 큰 logit을 가지는 것과 나머지 사이의 차이를 점점 크게 만들어버립니다. 결국 model이 다른 data에 적응하는 능력을 감소시킵니다.
-- model이 덜 confident하게 만들기 위해, label distribution $q(k|x)=\delta_{k,y}$ (k=y일 때 1이고 다른 경우 0)를 다음과 같이 대체할 수 있습니다.
+- training동안 실제 정답인 label의 logit은 다른 logit보다 훨씬 큰 값을 갖게 됩니다. 이렇게 해서 model이 주어진 input $$x$$에 대한 label $$y$$를 맞추는 것이죠. 하지만 이렇게 된다면 문제가 발생합니다. overfitting될 수도 있고 가장 큰 logit을 가지는 것과 나머지 사이의 차이를 점점 크게 만들어버립니다. 결국 model이 다른 data에 적응하는 능력을 감소시킵니다.
+- model이 덜 confident하게 만들기 위해, label distribution $$q(k|x)=\delta_{k,y}$$ (k=y일 때 1이고 다른 경우 0)를 다음과 같이 대체할 수 있습니다.
 
 $$
 q'(k|x)=(1-\epsilon)\delta_{k,y}+\epsilon u(k)
 $$
 
-- 각각 label에 대한 분포 $u(k)$, smooting parameter $\epsilon$입니다. 위와 같다면,  k=y인 경우에도 model은 $p(y|x)=1$이 아니라 $p(y|x)=(1-\epsilon)$이 되겠죠. 100%의 확신이 아닌 그보다 덜한 확신을 하게 되는 것입니다.
+- 각각 label에 대한 분포 $$u(k)$$, smooting parameter $$\epsilon$$입니다. 위와 같다면, k=y인 경우에도 model은 $$p(y|x)=1$$이 아니라 $$p(y|x)=(1-\epsilon)$$이 되겠죠. 100%의 확신이 아닌 그보다 덜한 확신을 하게 되는 것입니다.
 
 
 
