@@ -41,15 +41,15 @@ description: Transformer paper review
 
 ## Encoder and Decoder structure
 
-![Imgur](https://i.imgur.com/yPep7h9.png)
+![encoder-decoder](/assets/images/encoder-decoder.png)
 
 - encoder는 input sequence $$(x_1, ..., x_n)$$에 대해 다른 representation인 $$z = (z_1, ..., z_n)$$으로 바꿔줍니다.
-- decoder는 **z**를 받아, output sequence $(y_1, ... , y_n)$를 하나씩 만들어냅니다.
+- decoder는 **z**를 받아, output sequence $$(y_1, ... , y_n)$$를 하나씩 만들어냅니다.
 - 각각의 step에서 다음 symbol을 만들 때 이전에 만들어진 output(symbol)을 이용합니다. 예를 들어, "저는 사람입니다."라는 문장에서 '사람입니다'를 만들 때, '저는'이라는 symbol을 이용하는 거죠. 이런 특성을 *auto-regressive* 하다고 합니다.
 
 ## Encoder and Decoder stacks
 
-![Imgur](https://i.imgur.com/GJFLCRx.png)
+![architecture](/assets/images/archi2.png)
 
 ### Encoder
 
@@ -57,23 +57,14 @@ description: Transformer paper review
 - 그리고 각각의 layer는 두 개의 sub-layer, **multi-head self-attention mechanism**과 **position-wise fully connected feed-forward network**를 가지고 있습니다.
 - 이때 두 개의 sub-layer에 **residual connection**을 이용합니다. residual connection은 input을 output으로 그대로 전달하는 것을 말합니다. 이때 sub-layer의 output dimension을 embedding dimension과 맞춰줍니다. $$x+Sublayer(x)$$를 하기 위해서, 즉 residual connection을 하기 위해서는 두 값의 차원을 맞춰줄 필요가 있습니다. 그 후에 **layer normalization**을 적용합니다. 
 
-
-
 ### Decoder
 
 - 역시 N개의 동일한 layer로 이루어져 있습니다. 
-
 - encoder와 달리 encoder의 결과에 multi-head attention을 수행할 sub-layer를 추가합니다. 
-
 - 마찬가지로 sub-layer에 **residual connection**을 사용한 뒤, **layer normalization**을 해줍니다.
-
 - decoder에서는 encoder와 달리 *순차적으로* 결과를 만들어내야 하기 때문에, self-attention을 변형합니다. 바로 **masking**을 해주는 것이죠. masking을 통해, position $$i$$ 보다 이후에 있는 position에 attention을 주지 못하게 합니다. 즉, position $$i$$에 대한 예측은 미리 알고 있는 output들에만 의존을 하는 것입니다. 
 
-  ​
-
-  ![Imgur](https://i.imgur.com/nfF0IMF.png)
-
-  ​
+  ![masking](/assets/images/masking.png)
 
 - 위의 예시를 보면, **a**를 예측할 때는 **a**이후에 있는 **b,c**에는 attention이 주어지지 않는 것입니다. 그리고 **b**를 예측할 때는 **b**이전에 있는 **a**만 attention이 주어질 수 있고 이후에 있는 **c**는 attention이 주어지지 않는 것이죠.
 
@@ -83,6 +74,7 @@ description: Transformer paper review
 -  embedding 값을 고정시키지 않고, 학습을 하면서 embedding값이 변경되는 learned embedding을 사용했습니다. 이때 input과 output은 같은 embedding layer를 사용합니다. 
 -  또한 decoder output을 다음 token의 확률로 바꾸기 위해 learned linear transformation과 softmax function을 사용했습니다. learned linear transformation을 사용했다는 것은 decoder output에 weight matrix $$W$$를 곱해주는데, 이때 $$W$$가 학습된다는 것입니다.
 
+
 ## Attention
 
 - *attention*은 단어의 의미처럼 특정 정보에 좀 더 주의를 기울이는 것입니다. 
@@ -91,7 +83,7 @@ description: Transformer paper review
 
 ### Scaled Dot-Product Attention
 
-![Imgur](https://i.imgur.com/3W79aoB.png)
+![scaled-dot-product-attention](/assets/images/sdpa.PNG)
 
 - 해당 논문의 attention을 **Scaled Dot-Product Attention**이라고 부릅니다. 수식을 살펴보면 이렇게 부르는 이유를 알 수 있습니다.
 
@@ -106,7 +98,7 @@ $$
 
 ### Multi-Head Attention
 
-![Imgur](https://i.imgur.com/cT1Kt25.png)
+![multi-head-attention](/assets/images/mha.PNG)
 
 - 위의 그림을 수식으로 나타내면 다음과 같습니다.
 
@@ -118,7 +110,7 @@ $$
 
 
 
-![Imgur](https://i.imgur.com/oadTVgh.png)
+![multi-head](/assets/images/multi head.png)
 
 
 
@@ -128,7 +120,7 @@ $$
 - 그 다음 여러 개의 $$head$$를 concatenate하고 다시 projection을 수행합니다. 그래서 최종적인 $$d_{model}$$ dimension output 값이 나오게 되는거죠.
 - 각각의 과정에서 dimension을 표현하면 아래와 같습니다.
 
-![Imgur](https://i.imgur.com/t1mrAtL.png)
+![dimension](/assets/images/차원.png)
 
 ​			*$$d_Q,d_K,d_V$$는 각각 query, key, value 개수
 
@@ -136,25 +128,23 @@ $$
 
 #### encoder self-attention layer
 
-![Imgur](https://i.imgur.com/VGM0QqC.png)
+![encoder-self-attention](/assets/images/encoder self attention.png)
 
 - key, value, query들은 모두 encoder의 이전 layer의 output에서 옵니다. 따라서 이전 layer의 모든 position에 attention을 줄 수 있습니다. 만약 첫번째 layer라면 positional encoding이 더해진 input embedding이 됩니다. 
 
 #### decoder self-attention layer
 
-![Imgur](https://i.imgur.com/CL80irE.png)
+![decoder-self-attention](/assets/images/decoder self attention.png)
 
 - encoder와 비슷하게 decoder에서도 self-attention을 줄 수 있습니다. 하지만 $$i$$번째 output을 다시 $$i+1$$번째 input으로 사용하는 **auto-regressive**한 특성을 유지하기 위해 , **masking out**된 scaled dot-product attention을 적용했습니다.
-- masking out이 됐다는 것은 $$i$$번째 position에 대한 attention을 얻을 때, $i$번째 이후에 있는 모든 position은 $$Attention(Q, K, V) = softmax(\frac{QK^T}{\sqrt{d_k}})V$$에서 softmax의 input 값을 $$-\infty$$로 설정한 것입니다. 이렇게 한다면, $$i$$번째 이후에 있는 position에 attention을 주는 경우가 없겠죠.
+- masking out이 됐다는 것은 $$i$$번째 position에 대한 attention을 얻을 때, $$i$$번째 이후에 있는 모든 position은 $$Attention(Q, K, V) = softmax(\frac{QK^T}{\sqrt{d_k}})V$$에서 softmax의 input 값을 $$-\infty$$로 설정한 것입니다. 이렇게 한다면, $$i$$번째 이후에 있는 position에 attention을 주는 경우가 없겠죠.
 
 ### Encoder-Decoder Attention Layer
 
-![Imgur](https://i.imgur.com/OkvksI2.png)
+![encoder-decoder-attention](/assets/images/encoder-decoder attention.png)
 
 - query들은 이전 decoder layer에서 오고 key와 value들은 encoder의 output에서 오게 됩니다. 그래서 decoder의 모든 position에서 input sequence 즉, encoder output의 모든 position에 attention을 줄 수 있게 됩니다.
-
 - query가 decoder layer의 output인 이유는 *query*라는 것이 조건에 해당하기 때문입니다. 좀 더 풀어서 설명하면, '지금 decoder에서 이런 값이 나왔는데 무엇이 output이 돼야 할까?'가 query인 것이죠.  
-
 - 이때 query는 이미 이전 layer에서 masking out됐으므로, i번째 position까지만 attention을 얻게 됩니다.이 같은 과정은 sequence-to-sequence의 전형적인 encoder-decoder mechanisms를 따라한 것입니다.
 
   *모든 position에서 attention을 줄 수 있다는 게 이해가 안되면 [링크](http://mlexplained.com/2017/12/29/attention-is-all-you-need-explained/)를 참고하시기 바랍니다.
@@ -165,30 +155,28 @@ $$
 
 - encoder와 decoder의 각각의 layer는 아래와 같은 **fully connected feed-forward network**를 포함하고 있습니다.
 
-![Imgur](https://i.imgur.com/gLviZN0.png)
+![feed-forward-network](/assets/images/Sample-of-a-feed-forward-neural-network.png)
 
 - position 마다, 즉 개별 단어마다 적용되기 때문에 **position-wise**입니다. network는 두 번의 linear transformation과 activation function ReLU로 이루어져 있습니다.
+
 
 $$
 FFN(x)=max(0, xW_1+b_1)W_2+b_2
 $$
 
-![Imgur](https://i.imgur.com/9AqF8Cy.png)
+
+![ffn](/assets/images/ffn.png)
 
 
-
-- $$x$$에 linear transformation을 적용한 뒤, ReLU$$(max(0, z))$$를 거쳐 다시 한번 linear transformation을 적용합니다.
+- $$x$$에 linear transformation을 적용한 뒤, $$ReLU(max(0, z))$$를 거쳐 다시 한번 linear transformation을 적용합니다.
 - 이때 각각의 position마다 같은 parameter $$W, b$$를 사용하지만, layer가 달라지면 다른 parameter를 사용합니다.
 - kernel size가 1이고 channel이 layer인 convolution을 두 번 수행한 것으로도 위 과정을 이해할 수 있습니다. 
 
 ## Positional Encoding
 
 - transfomer는 recurrence도 아니고 convolution도 아니기 때문에, 단어의sequence를 이용하기 위해서는 단어의 position에 대한 정보를 추가해줄 필요가 있었습니다.
-
 - 그래서 encoder와 decoder의 input embedding에 **positional encoding**을 더해줬습니다.
-
 - positional encoding은 $$d_{model}$$(embedding 차원)과 같은 차원을 갖기 때문에 positional encoding vector와 embedding vector는 더해질 수 있습니다.
-
 - 논문에서는 다른 *frequency를 가지는 sine과 cosine 함수를 이용했습니다. 
 
   *주어진 구간내에서 완료되는 cycle의 개수
@@ -247,10 +235,11 @@ $$
 lrate = d_{model}^{-0.5}\cdot min(step\_num^{-0.5},step\_num \cdot warmup\_steps^{-1.5})
 $$
 
-![Imgur](https://i.imgur.com/IgC6BR6.png)
+![lr-graph](/assets/images/lr graph.png)
 
 - $$warmup\_step$$까지는 linear하게 learning rate를 증가시키다가, $$warmup\_step$$ 이후에는 $$step\_num$$의 inverse square root에 비례하도록 감소시킵니다. 
 - 이렇게 하는 이유는 처음에는 학습이 잘 되지 않은 상태이므로 learning rate를 빠르게 증가시켜 변화를 크게 주다가, 학습이 꽤 됐을 시점에 learning rate를 천천히 감소시켜 변화를 작게 주기 위해서입니다. 
+
 
 ## Regularization
 
@@ -319,9 +308,9 @@ $$
 
 - [Dropout: a simple way to prevent neural networks from overfitting](http://jmlr.org/papers/volume15/srivastava14a.old/srivastava14a.pdf)라는 논문에서 제시된 방법입니다.
 
-  ![Imgur](https://i.imgur.com/XBOQHI8.png)
+  ![dropout](/assets/images/dropout.PNG)
 
-- **dropout**이라는 용어는 neural network에서 unit들을 drop out하는 것을 가리킵니다. 즉, 해당 unit을 network에서 일시적으로 제거하는 것입니다. 그래서 다른 unit과의 모든 connection이 사라지게 됩니다. 어떤 unit을 dropout할지는 random하게 정합니다.
+- **dropout**이라는 용어는 neural network에서 unit들을 dropout하는 것을 가리킵니다. 즉, 해당 unit을 network에서 일시적으로 제거하는 것입니다. 그래서 다른 unit과의 모든 connection이 사라지게 됩니다. 어떤 unit을 dropout할지는 random하게 정합니다.
 
 - dropout은 training data에 overfitting되는 문제를 어느정도 막아줍니다. dropout된 unit들은 training되지 않는 것이니 training data에 값이 조정되지 않기 때문입니다. 
 
@@ -346,7 +335,7 @@ $$
 
 
 
-##Reference
+## Reference
 
 - http://www.whydsp.org/280
 - http://mlexplained.com/2017/12/29/attention-is-all-you-need-explained/
