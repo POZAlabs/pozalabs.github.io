@@ -44,3 +44,14 @@ description: Single Layer Perceptron summary
 * 단층 퍼셉트론은 모든 딥러닝 공부의 시작이다.
 * 단층 퍼셉트론은 입력 신호를 받으면 임계치에 따라 0 또는 1의 값을 출력한다.
 * 이러한 단층 퍼셉트론은 결국 공간을 선형으로 잘라서 구분하는 것과 동일하다.
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-103074382-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-103074382-1');
+</script>
+
