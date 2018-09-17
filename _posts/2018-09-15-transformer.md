@@ -330,7 +330,7 @@ $$
 q'(k|x)=(1-\epsilon)\delta_{k,y}+\epsilon u(k)
 $$
 
-- 각각 label에 대한 분포 $$u(k)$$, smooting parameter $$\epsilon$$입니다. 위와 같다면, k=y인 경우에도 model은 $$p(y|x)=1$$이 아니라 $$p(y|x)=(1-\epsilon)$$이 되겠죠. 100%의 확신이 아닌 그보다 덜한 확신을 하게 되는 것입니다.
+- 각각 label에 대한 분포 $$u(k)$$, smooting parameter $$\epsilon$$입니다. 위와 같다면, k=y인 경우에도 model은 $$p(y|x)=1$$이 아니라  $$p(y|x)=(1-\epsilon)$$이 되겠죠. 100%의 확신이 아닌 그보다 덜한 확신을 하게 되는 것입니다.
 
 ​
 
