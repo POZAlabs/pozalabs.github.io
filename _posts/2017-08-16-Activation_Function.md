@@ -34,7 +34,7 @@ description: Activation Function summary
 
 이라는 식이 도출되었다고 생각해보죠. 이 식은 담배를 전혀 안 피우는 사람은 10%의 확률로 폐암에 걸리고, 하루에 담배를 1개비씩 더 피울 때마다 폐암에 걸릴 확률이 2% 증가한다는 의미입니다. 표면적으로 보았을 때는 꽤나 합리적으로 보입니다. 하지만 과연 이 식을 실제 예측에 활용해도 전혀 문제가 없을까요? 예상하셨겠지만, 그렇지 않습니다.
 
-담배는 한 갑에 20개비가 들어있고, 3갑이면 60개비가 들어있습니다. 따라서 하루에 담배를 3갑 피우는 사람은 $0.02*60 + 0.1 = 1.3$, 즉 **130%의 확률로 폐암에 걸린다**는 결론이 도출됩니다. 이는 확률의 공리에 어긋나는 결론입니다. 따라서 과거의 수학자들은 선형이라는 이해 및 계산이 쉬운 방법을 그대로 유지하면서 확률의 공리에 어긋나지 않는 방법을 찾고자하였고, 다양한 방법들 중 가장 보편적으로 사용하게 된 방법이 로지스틱 함수를 연결함수로 사용한 **로지스틱 회귀분석**입니다.
+담배는 한 갑에 20개비가 들어있고, 3갑이면 60개비가 들어있습니다. 따라서 하루에 담배를 3갑 피우는 사람은 $$0.02*60 + 0.1 = 1.3$$, 즉 **130%의 확률로 폐암에 걸린다**는 결론이 도출됩니다. 이는 확률의 공리에 어긋나는 결론입니다. 따라서 과거의 수학자들은 선형이라는 이해 및 계산이 쉬운 방법을 그대로 유지하면서 확률의 공리에 어긋나지 않는 방법을 찾고자하였고, 다양한 방법들 중 가장 보편적으로 사용하게 된 방법이 로지스틱 함수를 연결함수로 사용한 **로지스틱 회귀분석**입니다.
 
 로지스틱 함수는 아래와 같이 생겼습니다. $$g(x)\quad =\quad \frac { { e }^{ x } }{ 1+{ e }^{ x } } $$
 
@@ -93,13 +93,13 @@ $$P(Y|X)\quad =\quad \frac { exp(\sum _{ i=0 }^{ 2 }{ { w }_{ i }{ x }_{ i } } )
 <p><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Logistic-curve.svg/1200px-Logistic-curve.svg.png" alt="Logistic-curve.svg"><br>By <a href="//commons.wikimedia.org/wiki/User:Qef" title="User:Qef">Qef</a> (<a href="//commons.wikimedia.org/wiki/User_talk:Qef" title="User talk:Qef">talk</a>) - Created from scratch with gnuplot, Public Domain, <a href="https://commons.wikimedia.org/w/index.php?curid=4310325">Link</a></p>
 
 #### <특징>
-- 수식 : $\sigma (wx+b)=\frac { { e }^{ wx+b } }{ 1+{ e }^{ wx+b } } $
+- 수식 : $$\sigma (wx+b)=\frac { { e }^{ wx+b } }{ 1+{ e }^{ wx+b } } $$
 - 범위 : (0,1)
 
 시그모이드 함수는 완전히 값을 전달하지 않거나(0) 혹은 완전히 전달한다(1)는 특성 때문에 실제 인체의 뉴런과 유사하다고 생각되어 널리 사용되었으나, 현재는 점차 사용하지 않는 추세입니다. 그 이유는 아래와 같습니다.
 1. **Vanishing Gradient** : 
 
-    sigmoid 함수는 뉴런의 활성화 값이 0 또는 1에 매우 가깝다면(saturate), 해당 편미분 값이 0에 매우 가까워지는 특성이 있습니다. 인공신경망의 back propagation에서 가장 일반적으로 사용되는 gradient descent의 경우 chain rule을 이용하는데, 이 과정에서 0에 매우 작은 값이 계속 곱해진다면 그 값은 0으로 점점 더 수렴합니다. 즉, 학습의 결과가 back propagation 과정에서 전달되지 못하고 이에 따라 weight 값의 조정이 되지 않습니다. 이것은 학습의 과정뿐만 아니라, 초기 weight 값을 임의로 줄 때에도 문제가 됩니다. $f=\sigma (wx+b)$ 를 통해 확인해보죠. 만약 w의 값이 매우 커서 $\sigma (wx+b)$의 값이 1에 매우 가까워 진다면, weight값은 초기 값에서 크게 변하지 않고 학습이 되지 않을 것입니다. 그럼 우리의 신경망 모델의 정확성도 감소하겠죠. 이것이 vanishing gradient problem입니다.
+    sigmoid 함수는 뉴런의 활성화 값이 0 또는 1에 매우 가깝다면(saturate), 해당 편미분 값이 0에 매우 가까워지는 특성이 있습니다. 인공신경망의 back propagation에서 가장 일반적으로 사용되는 gradient descent의 경우 chain rule을 이용하는데, 이 과정에서 0에 매우 작은 값이 계속 곱해진다면 그 값은 0으로 점점 더 수렴합니다. 즉, 학습의 결과가 back propagation 과정에서 전달되지 못하고 이에 따라 weight 값의 조정이 되지 않습니다. 이것은 학습의 과정뿐만 아니라, 초기 weight 값을 임의로 줄 때에도 문제가 됩니다. $$f=\sigma (wx+b)$$ 를 통해 확인해보죠. 만약 w의 값이 매우 커서 $$\sigma (wx+b)$$의 값이 1에 매우 가까워 진다면, weight값은 초기 값에서 크게 변하지 않고 학습이 되지 않을 것입니다. 그럼 우리의 신경망 모델의 정확성도 감소하겠죠. 이것이 vanishing gradient problem입니다.
 <p></p>
     
 2. **중심값이 0이 아니다** : 
@@ -112,7 +112,7 @@ $$P(Y|X)\quad =\quad \frac { exp(\sum _{ i=0 }^{ 2 }{ { w }_{ i }{ x }_{ i } } )
 ![tanh.png](/assets/images/Activation_function/tanh.png)
 
 #### <특징>
-- 수식 : $tanh(x)=\frac { { e }^{ 2x }-1 }{ { e }^{ 2x }+1 } $
+- 수식 : $$tanh(x)=\frac { { e }^{ 2x }-1 }{ { e }^{ 2x }+1 } $$
 - 범위 : (-1,1)
 
 tanh(hyperbolic tangent) function은 sigmoid 처럼 비선형 함수이지만 결과값의 범위가 -1부터 1이기 때문에 sigmoid와 달리 중심값이 0입니다. 따라서 sigmoid보다 optimazation이 빠르다는 장점이 있고, 항상 선호됩니다. 하지만 여전히 vanishing gradient 문제가 발생하기 때문에 대안이 등장하게 됩니다.
@@ -122,8 +122,8 @@ tanh(hyperbolic tangent) function은 sigmoid 처럼 비선형 함수이지만 �
 ![relu.png](/assets/images/Activation_function/relu.png)
 
 #### <특징>
-- 수식 : $ y = max(0,x) $
-- 범위 : (0,$\infty $)
+- 수식 : $$ y = max(0,x) $$
+- 범위 : (0,$$\infty $$)
 
 Relu는 위 그림처럼 선형그래프를 한 번 꺾은 형태입니다. 이 간단한 함수는 오랫동안 인공신경망의 발목을 잡던 vanishing gradient 문제를 해결했습니다. 하지만 여전히 장점과 단점이 존재합니다.
 
