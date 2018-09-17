@@ -141,6 +141,8 @@ Relu는 위 그림처럼 선형그래프를 한 번 꺾은 형태입니다. 이 
 
 이번 포스팅을 통해 우리는 activation function이 무엇이고, 왜 필요한 것인지 알아보았습니다. 또한 어떠한 activation을 어떻게 사용해야하는지도 배웠습니다. 제가 위에 소개한 것 이외에도 다양한 activation function이 있으므로, 한 번쯤 찾아보며 공부해보시면 좋겠습니다.
 
+<script type="text/javascript" async src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"> </script>
+
 <!-- Global site tag (gtag.js) - Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=UA-103074382-1"></script>
 <script>
