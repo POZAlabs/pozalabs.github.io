@@ -323,14 +323,14 @@ $$
 - [Rethinking the inception architecture for computer vision](https://arxiv.org/pdf/1512.00567.pdf)라는 논문에서 제시된 방법입니다.
 - training동안 실제 정답인 label의 logit은 다른 logit보다 훨씬 큰 값을 갖게 됩니다. 이렇게 해서 model이 주어진 input $$x$$에 대한 label $$y$$를 맞추는 것이죠. 
 - 하지만 이렇게 된다면 문제가 발생합니다. overfitting될 수도 있고 가장 큰 logit을 가지는 것과 나머지 사이의 차이를 점점 크게 만들어버립니다. 결국 model이 다른 data에 적응하는 능력을 감소시킵니다.
-- model이 덜 confident하게 만들기 위해, label distribution $$q(k \given x)=\delta_{k,y}$$를 (k가 y일 경우 1, 나머지는 0) 다음과 같이 대체할 수 있습니다.
+- model이 덜 confident하게 만들기 위해, label distribution $$q(k \mid x)=\delta_{k,y}$$를 (k가 y일 경우 1, 나머지는 0) 다음과 같이 대체할 수 있습니다.
 
 
 $$
 q'(k|x)=(1-\epsilon)\delta_{k,y}+\epsilon u(k)
 $$
 
-- 각각 label에 대한 분포 $$u(k)$$, smooting parameter $$\epsilon$$입니다. 위와 같다면, k=y인 경우에도 model은 $$p(y \given x)=1$$이 아니라  $$p(y \given x)=(1-\epsilon)$$이 되겠죠. 100%의 확신이 아닌 그보다 덜한 확신을 하게 되는 것입니다.
+- 각각 label에 대한 분포 $$u(k)$$, smooting parameter $$\epsilon$$입니다. 위와 같다면, k=y인 경우에도 model은 $$p(y \mid x)=1$$이 아니라  $$p(y \mid x)=(1-\epsilon)$$이 되겠죠. 100%의 확신이 아닌 그보다 덜한 확신을 하게 되는 것입니다.
 
 ​
 
