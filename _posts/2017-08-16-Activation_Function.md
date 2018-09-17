@@ -37,7 +37,10 @@ description: Activation Function summary
 
 로지스틱 함수는 아래와 같이 생겼습니다. 
 
-$$g(x)\quad =\quad \frac { { e }^{ x } }{ 1+{ e }^{ x } } $$
+
+$$
+g(x)\quad =\quad \frac { { e }^{ x } }{ 1+{ e }^{ x } } 
+$$
 
 
 이것을 연결함수로 적용한 generalized linear model, 즉 logistic regression의 수식은 아래와 같은 형태가 됩니다.
