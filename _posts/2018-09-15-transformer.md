@@ -1,10 +1,12 @@
 ---
-title: "Transformer paper 뽀개기"
+title: "Attention is all you need paper 뽀개기"
 layout: post
 date: 2018-09-15
 headerImage: False
 tag:
 - transformer
+- attention
+- attention is all you need
 - paper
 - review
 //star: true
