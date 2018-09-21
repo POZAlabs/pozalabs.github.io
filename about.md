@@ -22,13 +22,6 @@ If you want to contact us,
 	<li>Git</li>
 </ul>
 
-<h2>Projects</h2>
-
-<ul>
-	<li><a href="https://github.com/">Kaggle Instacart</a></li>
-	
-</ul>
-
 <h2>Home Page</h2>
 <ul>
 	<li><a href="http://pozalabs.com/contact/">pozalabs.com</a></li>
