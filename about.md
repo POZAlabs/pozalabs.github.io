@@ -2,7 +2,7 @@
 title: About
 layout: page
 ---
-![Profile Image](/assets/images/profile.jpeg)
+![Profile Image](/assets/images/profile.png)
 
 <p>A team for studying deep learning and solving problems with it
 If you want to contact us,
