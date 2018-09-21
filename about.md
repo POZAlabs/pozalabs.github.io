@@ -7,10 +7,12 @@ layout: page
 <p>A team for studying deep learning and solving problems with it
 If you want to contact us,
 <p>
-	
+
+<ul>	
 	<li>address: 16F, D2 Startup Factory, 382, Gangnam-daero, Gangnam-gu, Seoul, Republic of Korea (06232)</li>
 	<li>phone: +82 10 9179 3513</li>
 	<li>mail: contact@pozalabs.com</li>
+</ul>
 
 <h2>Skills</h2>
 
@@ -28,5 +30,6 @@ If you want to contact us,
 </ul>
 
 <h2>Home Page</h2>
-
+<ul>
 	<li><a href="http://pozalabs.com/contact/">pozalabs.com</a></li>
+</ul>
