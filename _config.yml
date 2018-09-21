@@ -8,7 +8,7 @@ description: A blog about technology and stuff related
 # if it's an external image, update below for true
 # better with square images
 external-image: false
-picture: assets/images/profile.jpg
+picture: assets/images/profile.jpeg
 
 # If you want to include your resume, set to true
 # and specify source (external or local).
@@ -16,7 +16,7 @@ resume: false
 resume-external: false
 resume-url: https://google.com/?q=my+resume
 
-url: https://pozalabs.github.io
+url: http://pozalabs.com/contact/
 # your url: http://USERNAME.github.io
 
 permalink: /:title/
@@ -31,7 +31,7 @@ permalink: /:title/
 # if you don't want comments in your posts, leave categories empty
 disqus:
   shortname: pozalabs # enter this from your disqus account
-  categories: [blog, project] # only show disqus for posts that have these categories
+  categories: [blog] # only show disqus for posts that have these categories
 
 # if you don't have any of social below, comment the line
 #facebook: 
@@ -47,7 +47,7 @@ github: POZAlabs
 # stackoverflow: 7044681/mystackoverflow
 # quora: userquora
 # reddit: username
-medium: medium
+# medium: medium
 # vimeo: myvimeo
 email: poza.labs@gmail.com
 
@@ -56,13 +56,13 @@ authors:
         name: Hyerim Kim
         bio: A team for deep learning
         external-image: False
-        picture: assets/images/profile.jpg
+        picture: assets/images/profile.jpeg
         twitter: None
     hyunho:
         name: Hyunho Cho
         bio: A team for deep learning
         external-image: False
-        picture: assets/images/profile.jpg
+        picture: assets/images/profile.jpeg
         twitter: None
     
 
@@ -76,7 +76,7 @@ width: normal
 # paginate_path: "blog/:num/"
 
 # if you don't need projects, comment the *projects* configs below
-projects: true
+#projects: true
 
 # if you don't need "about" or "blog", comment them out below
 about: true
