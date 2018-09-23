@@ -18,6 +18,7 @@ If you want to contact us,
 
 <ul class="skill-list">
 	<li>Python</li>
+	<li>Deep-learning</li>
 	<li>Tensorflow</li>
 	<li>Git</li>
 </ul>
