@@ -26,3 +26,8 @@ If you want to contact us,
 <ul>
 	<li><a href="http://pozalabs.com/contact/">pozalabs.com</a></li>
 </ul>
+
+<h2>Rocket Punch</h2>
+<ul>
+	<li><a href="https://www.rocketpunch.com/companies/pozalabs">rocket punch pozalabs</a></li>
+</ul>
