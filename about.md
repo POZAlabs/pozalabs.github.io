@@ -4,7 +4,7 @@ layout: page
 ---
 ![Profile Image](/assets/images/profile.png)
 
-<p>A team for studying deep learning and solving problems with it
+<p>To make music easier for people who love music
 If you want to contact us,
 <p>
 
