@@ -2,11 +2,15 @@
 title: About
 layout: page
 ---
-![Profile Image](/assets/images/profile.png)
+![Profile Image](/assets/images/profile/profile.png)
 
+<<<<<<< Updated upstream
 <p>To make music easier for people who love music
 If you want to contact us,
 <p>
+=======
+<p><b>We help people who love music to create better music.</b> If you want to contact us.</p>
+>>>>>>> Stashed changes
 
 <ul>	
 	<li>address: 16F, D2 Startup Factory, 382, Gangnam-daero, Gangnam-gu, Seoul, Republic of Korea (06232)</li>
@@ -20,15 +24,22 @@ If you want to contact us,
 	<li>Python</li>
 	<li>Deep-learning</li>
 	<li>Tensorflow</li>
+	<li>Deep Learning</li>
 	<li>Git</li>
 </ul>
 
 <h2>Home Page</h2>
 <ul>
-	<li><a href="http://pozalabs.com/contact/">pozalabs.com</a></li>
+	<li><a href="http://pozalabs.com/">go to Home Page</a></li>
 </ul>
 
 <h2>Rocket Punch</h2>
+<<<<<<< Updated upstream
 <ul>
 	<li><a href="https://www.rocketpunch.com/companies/pozalabs">rocket punch pozalabs</a></li>
 </ul>
+=======
+ <ul>
+ 	<li><a href="https://www.rocketpunch.com/companies/pozalabs">go to Rocket Punch</a></li>
+ </ul>
+>>>>>>> Stashed changes

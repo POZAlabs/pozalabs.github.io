@@ -1,6 +1,6 @@
 # main text of home
-name: POZA LABS
-bio: A team for deep learning
+name: 포자랩스의 기술 블로그
+bio: Music & Deep Learning Startup
 
 # twitter summary info
 description: A blog about technology and stuff related
@@ -8,7 +8,7 @@ description: A blog about technology and stuff related
 # if it's an external image, update below for true
 # better with square images
 external-image: false
-picture: assets/images/profile.png
+picture: assets/images/profile/logo.jpg
 
 # If you want to include your resume, set to true
 # and specify source (external or local).
@@ -16,7 +16,7 @@ resume: false
 resume-external: false
 resume-url: https://google.com/?q=my+resume
 
-url: http://pozalabs.github.io
+url: https://pozalabs.github.io
 # your url: http://USERNAME.github.io
 
 permalink: /:title/
@@ -49,7 +49,7 @@ github: POZAlabs
 # reddit: username
 # medium: medium
 # vimeo: myvimeo
-email: poza.labs@gmail.com
+email: contact@pozalabs.com
 
 authors:
     hyerim:
