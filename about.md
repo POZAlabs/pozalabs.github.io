@@ -4,7 +4,7 @@ layout: page
 ---
 ![Profile Image](/assets/images/profile.png)
 
-<p>A team for studying deep learning and solving problems with it
+<p>To make music easier for people who love music
 If you want to contact us,
 <p>
 
@@ -18,6 +18,7 @@ If you want to contact us,
 
 <ul class="skill-list">
 	<li>Python</li>
+	<li>Deep-learning</li>
 	<li>Tensorflow</li>
 	<li>Git</li>
 </ul>
@@ -25,4 +26,9 @@ If you want to contact us,
 <h2>Home Page</h2>
 <ul>
 	<li><a href="http://pozalabs.com/contact/">pozalabs.com</a></li>
+</ul>
+
+<h2>Rocket Punch</h2>
+<ul>
+	<li><a href="https://www.rocketpunch.com/companies/pozalabs">rocket punch pozalabs</a></li>
 </ul>
