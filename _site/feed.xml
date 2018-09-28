@@ -1,0 +1,956 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title></title>
+    <description>A blog about technology and stuff related</description>
+    <link>http://localhost:4000/</link>
+    <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml"/>
+    <pubDate>Fri, 28 Sep 2018 15:59:36 +0900</pubDate>
+    <lastBuildDate>Fri, 28 Sep 2018 15:59:36 +0900</lastBuildDate>
+    <generator>Jekyll v3.7.4</generator>
+    
+      <item>
+        <title>Attention is all you need paper 뽀개기</title>
+        <description>&lt;p&gt;이번 포스팅에서는 포자랩스에서 핵심적으로 쓰고 있는 모델인 &lt;strong&gt;transformer&lt;/strong&gt;의 논문을 요약하면서 추가적인 기법들도 설명드리겠습니다.&lt;/p&gt;
+
+&lt;p&gt;​&lt;/p&gt;
+
+&lt;h1 id=&quot;why&quot;&gt;Why?&lt;/h1&gt;
+
+&lt;h2 id=&quot;long-term-dependency-problem&quot;&gt;Long-term dependency problem&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;sequence data를 처리하기 위해 이전까지 많이 쓰이던 model은 recurrent model이었습니다. recurrent model은 t번째에 대한 output을 만들기 위해, t번째 input과 t-1번째 hidden state를 이용했습니다. 이렇게 한다면 자연스럽게 문장의 순차적인 특성이 유지됩니다. 문장을 쓸 때 뒤의 단어부터 쓰지 않고 처음부터 차례차례 쓰는 것과 마찬가지인것입니다.&lt;/li&gt;
+  &lt;li&gt;하지만 recurrent model의 경우 많은 개선점이 있었음에도 long-term dependency에 취약하다는 단점이 있었습니다. 예를 들어, “저는 언어학을 좋아하고, 인공지능중에서도 딥러닝을 배우고 있고 자연어 처리에 관심이 많습니다.”라는 문장을 만드는 게 model의 task라고 해봅시다. 이때 ‘자연어’라는 단어를 만드는데 ‘언어학’이라는 단어는 중요한 단서입니다.&lt;/li&gt;
+  &lt;li&gt;그러나, 두 단어 사이의 거리가 가깝지 않으므로 model은 앞의 ‘언어학’이라는 단어를 이용해 자연어’라는 단어를 만들지 못하고,  언어학 보다 가까운 단어인 ‘딥러닝’을 보고 ‘이미지’를 만들 수도 있는 거죠. 이처럼, 어떤 정보와 다른 정보 사이의 거리가 멀 때 해당 정보를 이용하지 못하는 것이 &lt;strong&gt;long-term dependency problem&lt;/strong&gt;입니다.&lt;/li&gt;
+  &lt;li&gt;recurrent model은 순차적인 특성이 유지되는 뛰어난 장점이 있었음에도, long-term dependency problem이라는 단점을 가지고 있었습니다.&lt;/li&gt;
+  &lt;li&gt;이와 달리 transformer는 recurrence를 사용하지 않고 대신 &lt;strong&gt;attention mechanism&lt;/strong&gt;만을 사용해 input과 output의 dependency를 포착해냈습니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;​&lt;/p&gt;
+
+&lt;h2 id=&quot;parallelization&quot;&gt;Parallelization&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;recurrent model은 학습 시, t번째 hidden state를 얻기 위해서 t-1번째 hidden state가 필요했습니다. 즉, 순서대로 계산될 필요가 있었습니다. 그래서 병렬 처리를 할 수 없었고 계산 속도가 느렸습니다.&lt;/li&gt;
+  &lt;li&gt;하지만 transformer에서는 학습 시 encoder에서는 각각의 position에 대해, 즉 각각의 단어에 대해 attention을 해주기만 하고, decoder에서는 masking 기법을 이용해 병렬 처리가 가능하게 됩니다. (masking이 어떤 것인지는 이후에 설명해 드리겠습니다)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;​&lt;/p&gt;
+
+&lt;h1 id=&quot;model-architecture&quot;&gt;Model Architecture&lt;/h1&gt;
+
+&lt;h2 id=&quot;encoder-and-decoder-structure&quot;&gt;Encoder and Decoder structure&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/encoder-decoder.png&quot; alt=&quot;encoder-decoder&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;encoder는 input sequence &lt;script type=&quot;math/tex&quot;&gt;(x_1, ..., x_n)&lt;/script&gt;에 대해 다른 representation인 &lt;script type=&quot;math/tex&quot;&gt;z = (z_1, ..., z_n)&lt;/script&gt;으로 바꿔줍니다.&lt;/li&gt;
+  &lt;li&gt;decoder는 &lt;strong&gt;z&lt;/strong&gt;를 받아, output sequence &lt;script type=&quot;math/tex&quot;&gt;(y_1, ... , y_n)&lt;/script&gt;를 하나씩 만들어냅니다.&lt;/li&gt;
+  &lt;li&gt;각각의 step에서 다음 symbol을 만들 때 이전에 만들어진 output(symbol)을 이용합니다. 예를 들어, “저는 사람입니다.”라는 문장에서 ‘사람입니다’를 만들 때, ‘저는’이라는 symbol을 이용하는 거죠. 이런 특성을 &lt;em&gt;auto-regressive&lt;/em&gt; 하다고 합니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;​&lt;/p&gt;
+
+&lt;h2 id=&quot;encoder-and-decoder-stacks&quot;&gt;Encoder and Decoder stacks&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/archi2.png&quot; alt=&quot;architecture&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;encoder&quot;&gt;Encoder&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;N개의 동일한 layer로 구성돼 있습니다. input $x$가 첫 번째 layer에 들어가게 되고, &lt;script type=&quot;math/tex&quot;&gt;layer(x)&lt;/script&gt;가  다시 layer에 들어가는 식입니다.&lt;/li&gt;
+  &lt;li&gt;그리고 각각의 layer는 두 개의 sub-layer, &lt;strong&gt;multi-head self-attention mechanism&lt;/strong&gt;과 &lt;strong&gt;position-wise fully connected feed-forward network&lt;/strong&gt;를 가지고 있습니다.&lt;/li&gt;
+  &lt;li&gt;이때 두 개의 sub-layer에 &lt;strong&gt;residual connection&lt;/strong&gt;을 이용합니다. residual connection은 input을 output으로 그대로 전달하는 것을 말합니다. 이때 sub-layer의 output dimension을 embedding dimension과 맞춰줍니다. &lt;script type=&quot;math/tex&quot;&gt;x+Sublayer(x)&lt;/script&gt;를 하기 위해서, 즉 residual connection을 하기 위해서는 두 값의 차원을 맞춰줄 필요가 있습니다. 그 후에 &lt;strong&gt;layer normalization&lt;/strong&gt;을 적용합니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;decoder&quot;&gt;Decoder&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;역시 N개의 동일한 layer로 이루어져 있습니다.&lt;/li&gt;
+  &lt;li&gt;encoder와 달리 encoder의 결과에 multi-head attention을 수행할 sub-layer를 추가합니다.&lt;/li&gt;
+  &lt;li&gt;마찬가지로 sub-layer에 &lt;strong&gt;residual connection&lt;/strong&gt;을 사용한 뒤, &lt;strong&gt;layer normalization&lt;/strong&gt;을 해줍니다.&lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;decoder에서는 encoder와 달리 &lt;em&gt;순차적으로&lt;/em&gt; 결과를 만들어내야 하기 때문에, self-attention을 변형합니다. 바로 &lt;strong&gt;masking&lt;/strong&gt;을 해주는 것이죠. masking을 통해, position &lt;script type=&quot;math/tex&quot;&gt;i&lt;/script&gt; 보다 이후에 있는 position에 attention을 주지 못하게 합니다. 즉, position &lt;script type=&quot;math/tex&quot;&gt;i&lt;/script&gt;에 대한 예측은 미리 알고 있는 output들에만 의존을 하는 것입니다.&lt;/p&gt;
+
+    &lt;p&gt;&lt;img src=&quot;/assets/images/masking.png&quot; alt=&quot;masking&quot; /&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;위의 예시를 보면, &lt;strong&gt;a&lt;/strong&gt;를 예측할 때는 &lt;strong&gt;a&lt;/strong&gt;이후에 있는 &lt;strong&gt;b,c&lt;/strong&gt;에는 attention이 주어지지 않는 것입니다. 그리고 &lt;strong&gt;b&lt;/strong&gt;를 예측할 때는 &lt;strong&gt;b&lt;/strong&gt;이전에 있는 &lt;strong&gt;a&lt;/strong&gt;만 attention이 주어질 수 있고 이후에 있는 &lt;strong&gt;c&lt;/strong&gt;는 attention이 주어지지 않는 것이죠.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;​&lt;/p&gt;
+
+&lt;h2 id=&quot;embeddings-and-softmax&quot;&gt;Embeddings and Softmax&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;embedding 값을 고정시키지 않고, 학습을 하면서 embedding값이 변경되는 learned embedding을 사용했습니다. 이때 input과 output은 같은 embedding layer를 사용합니다.&lt;/li&gt;
+  &lt;li&gt;또한 decoder output을 다음 token의 확률로 바꾸기 위해 learned linear transformation과 softmax function을 사용했습니다. learned linear transformation을 사용했다는 것은 decoder output에 weight matrix &lt;script type=&quot;math/tex&quot;&gt;W&lt;/script&gt;를 곱해주는데, 이때 &lt;script type=&quot;math/tex&quot;&gt;W&lt;/script&gt;가 학습된다는 것입니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;​&lt;/p&gt;
+
+&lt;h2 id=&quot;attention&quot;&gt;Attention&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;em&gt;attention&lt;/em&gt;은 단어의 의미처럼 특정 정보에 좀 더 주의를 기울이는 것입니다.&lt;/li&gt;
+  &lt;li&gt;예를 들어 model이 수행해야 하는 task가 번역이라고 해봅시다.  source는 영어이고 target은 한국어입니다. “Hi, my name is poza.”라는 문장과 대응되는 “안녕, 내 이름은 포자야.”라는 문장이 있습니다. model이 &lt;em&gt;이름은&lt;/em&gt;이라는 token을 decode할 때, source에서 가장 중요한 것은 &lt;em&gt;name&lt;/em&gt;입니다.&lt;/li&gt;
+  &lt;li&gt;그렇다면, source의 모든 token이 비슷한 중요도를 갖기 보다는 &lt;em&gt;name&lt;/em&gt;이 더 큰 중요도를 가지면 되겠죠. 이때, 더 큰 중요도를 갖게 만드는 방법이 바로 &lt;strong&gt;attention&lt;/strong&gt;입니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;scaled-dot-product-attention&quot;&gt;Scaled Dot-Product Attention&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/sdpa.PNG&quot; alt=&quot;scaled-dot-product-attention&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;해당 논문의 attention을 &lt;strong&gt;Scaled Dot-Product Attention&lt;/strong&gt;이라고 부릅니다. 수식을 살펴보면 이렇게 부르는 이유를 알 수 있습니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;Attention(Q, K, V) = softmax(\frac{QK^T}{\sqrt{d_k}})V&lt;/script&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;먼저 input은 &lt;script type=&quot;math/tex&quot;&gt;d_k&lt;/script&gt; dimension의 query와 key들, &lt;script type=&quot;math/tex&quot;&gt;d_v&lt;/script&gt; dimension의 value들로 이루어져 있습니다.&lt;/li&gt;
+  &lt;li&gt;이때 모든 query와 key에 대한 dot-product를 계산하고 각각을 &lt;script type=&quot;math/tex&quot;&gt;\sqrt{d_k}&lt;/script&gt;로 나누어줍니다. &lt;em&gt;dot-product&lt;/em&gt;를 하고  &lt;script type=&quot;math/tex&quot;&gt;\sqrt{d_k}&lt;/script&gt;로 scaling을 해주기 때문에 &lt;strong&gt;Scaled Dot-Product Attention&lt;/strong&gt;인 것입니다. 그리고 여기에 softmax를 적용해 value들에 대한 weights를 얻어냅니다.&lt;/li&gt;
+  &lt;li&gt;key와 value는 attention이 이루어지는 위치에 상관없이 같은 값을 갖게 됩니다. 이때 query와 key에 대한 dot-product를 계산하면 각각의 query와 key 사이의 &lt;strong&gt;유사도&lt;/strong&gt;를 구할 수 있게 됩니다. 흔히 들어본 cosine similarity는 dot-product에서 vector의 magnitude로 나눈 것입니다.  &lt;script type=&quot;math/tex&quot;&gt;\sqrt{d_k}&lt;/script&gt;로 scaling을 해주는 이유는 dot-products의 값이 커질수록 softmax 함수에서 기울기의 변화가 거의 없는 부분으로 가기 때문입니다.&lt;/li&gt;
+  &lt;li&gt;softmax를 거친 값을 value에 곱해준다면, query와 유사한 value일수록, 즉 중요한 value일수록 더 높은 값을 가지게 됩니다. 중요한 정보에 더 관심을 둔다는 attention의 원리에 알맞은 것입니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;multi-head-attention&quot;&gt;Multi-Head Attention&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/mha.PNG&quot; alt=&quot;multi-head-attention&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;위의 그림을 수식으로 나타내면 다음과 같습니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;MultiHead(Q, K, V) = Concat(head_1,...,head_h)W^O&lt;/script&gt;
+
+&lt;p&gt;​								where &lt;script type=&quot;math/tex&quot;&gt;head_i=Attention(QW_i^Q, KW_i^K, VW_i^V)&lt;/script&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/multi head.png&quot; alt=&quot;multi-head&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;script type=&quot;math/tex&quot;&gt;d_{model}&lt;/script&gt; dimension의 key, value, query들로 하나의 attention을 수행하는 대신 key, value, query들에 각각 다른 학습된 linear projection을 h번 수행하는 게 더 좋다고 합니다. 즉, 동일한 &lt;script type=&quot;math/tex&quot;&gt;Q, K, V&lt;/script&gt;에 각각 다른 weight matrix &lt;script type=&quot;math/tex&quot;&gt;W&lt;/script&gt;를 곱해주는 것이죠. 이때 parameter matrix는 &lt;script type=&quot;math/tex&quot;&gt;W_i^Q \in \mathbb{R}^{d_{model} \mathsf{x} d_k}, W_i^K \in \mathbb{R}^{d_{model} \mathsf{x} d_k}, W_i^V \in \mathbb{R}^{d_{model} \mathsf{x} d_v}, W_i^O \in \mathbb{R}^{hd_ v\mathsf{x} d_{model}}&lt;/script&gt; 입니다.&lt;/li&gt;
+  &lt;li&gt;순서대로 query, key, value, output에 대한 parameter matrix입니다. projection이라고 하는 이유는 각각의 값들이 parameter matrix와 곱해졌을 때 &lt;script type=&quot;math/tex&quot;&gt;d_k, d_v, d_{model}&lt;/script&gt;차원으로 project되기 때문입니다. 논문에서는 &lt;script type=&quot;math/tex&quot;&gt;d_k=d_v=d_{model}/h&lt;/script&gt;를 사용했는데 꼭 &lt;script type=&quot;math/tex&quot;&gt;d_k&lt;/script&gt;와 &lt;script type=&quot;math/tex&quot;&gt;d_v&lt;/script&gt;가 같을 필요는 없습니다.&lt;/li&gt;
+  &lt;li&gt;이렇게 project된 key, value, query들은 병렬적으로 attention function을 거쳐 &lt;script type=&quot;math/tex&quot;&gt;d_v&lt;/script&gt; dimension output 값으로 나오게 됩니다.&lt;/li&gt;
+  &lt;li&gt;그 다음 여러 개의 &lt;script type=&quot;math/tex&quot;&gt;head&lt;/script&gt;를 concatenate하고 다시 projection을 수행합니다. 그래서 최종적인 &lt;script type=&quot;math/tex&quot;&gt;d_{model}&lt;/script&gt; dimension output 값이 나오게 되는거죠.&lt;/li&gt;
+  &lt;li&gt;각각의 과정에서 dimension을 표현하면 아래와 같습니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/차원.png&quot; alt=&quot;dimension&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;​			*&lt;script type=&quot;math/tex&quot;&gt;d_Q,d_K,d_V&lt;/script&gt;는 각각 query, key, value 개수&lt;/p&gt;
+
+&lt;h3 id=&quot;self-attention&quot;&gt;Self-Attention&lt;/h3&gt;
+
+&lt;h4 id=&quot;encoder-self-attention-layer&quot;&gt;encoder self-attention layer&lt;/h4&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/encoder self attention.png&quot; alt=&quot;encoder-self-attention&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;key, value, query들은 모두 encoder의 이전 layer의 output에서 옵니다. 따라서 이전 layer의 모든 position에 attention을 줄 수 있습니다. 만약 첫번째 layer라면 positional encoding이 더해진 input embedding이 됩니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;decoder-self-attention-layer&quot;&gt;decoder self-attention layer&lt;/h4&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/decoder self attention.png&quot; alt=&quot;decoder-self-attention&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;encoder와 비슷하게 decoder에서도 self-attention을 줄 수 있습니다. 하지만 &lt;script type=&quot;math/tex&quot;&gt;i&lt;/script&gt;번째 output을 다시 &lt;script type=&quot;math/tex&quot;&gt;i+1&lt;/script&gt;번째 input으로 사용하는 &lt;strong&gt;auto-regressive&lt;/strong&gt;한 특성을 유지하기 위해 , &lt;strong&gt;masking out&lt;/strong&gt;된 scaled dot-product attention을 적용했습니다.&lt;/li&gt;
+  &lt;li&gt;masking out이 됐다는 것은 &lt;script type=&quot;math/tex&quot;&gt;i&lt;/script&gt;번째 position에 대한 attention을 얻을 때, &lt;script type=&quot;math/tex&quot;&gt;i&lt;/script&gt;번째 이후에 있는 모든 position은 &lt;script type=&quot;math/tex&quot;&gt;Attention(Q, K, V) = softmax(\frac{QK^T}{\sqrt{d_k}})V&lt;/script&gt;에서 softmax의 input 값을 &lt;script type=&quot;math/tex&quot;&gt;-\infty&lt;/script&gt;로 설정한 것입니다. 이렇게 한다면, &lt;script type=&quot;math/tex&quot;&gt;i&lt;/script&gt;번째 이후에 있는 position에 attention을 주는 경우가 없겠죠.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;encoder-decoder-attention-layer&quot;&gt;Encoder-Decoder Attention Layer&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/encoder-decoder attention.png&quot; alt=&quot;encoder-decoder-attention&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;query들은 이전 decoder layer에서 오고 key와 value들은 encoder의 output에서 오게 됩니다. 그래서 decoder의 모든 position에서 input sequence 즉, encoder output의 모든 position에 attention을 줄 수 있게 됩니다.&lt;/li&gt;
+  &lt;li&gt;query가 decoder layer의 output인 이유는 &lt;em&gt;query&lt;/em&gt;라는 것이 조건에 해당하기 때문입니다. 좀 더 풀어서 설명하면, ‘지금 decoder에서 이런 값이 나왔는데 무엇이 output이 돼야 할까?’가 query인 것이죠.&lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;이때 query는 이미 이전 layer에서 masking out됐으므로, i번째 position까지만 attention을 얻게 됩니다.이 같은 과정은 sequence-to-sequence의 전형적인 encoder-decoder mechanisms를 따라한 것입니다.&lt;/p&gt;
+
+    &lt;p&gt;*모든 position에서 attention을 줄 수 있다는 게 이해가 안되면 &lt;a href=&quot;http://mlexplained.com/2017/12/29/attention-is-all-you-need-explained/&quot;&gt;링크&lt;/a&gt;를 참고하시기 바랍니다.&lt;/p&gt;
+
+    &lt;p&gt;​&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;position-wise-feed-forward-networks&quot;&gt;Position-wise Feed-Forward Networks&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;encoder와 decoder의 각각의 layer는 아래와 같은 &lt;strong&gt;fully connected feed-forward network&lt;/strong&gt;를 포함하고 있습니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/Sample-of-a-feed-forward-neural-network.png&quot; alt=&quot;feed-forward-network&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;position 마다, 즉 개별 단어마다 적용되기 때문에 &lt;strong&gt;position-wise&lt;/strong&gt;입니다. network는 두 번의 linear transformation과 activation function ReLU로 이루어져 있습니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;FFN(x)=max(0, xW_1+b_1)W_2+b_2&lt;/script&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/ffn.png&quot; alt=&quot;ffn&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;script type=&quot;math/tex&quot;&gt;x&lt;/script&gt;에 linear transformation을 적용한 뒤, &lt;script type=&quot;math/tex&quot;&gt;ReLU(max(0, z))&lt;/script&gt;를 거쳐 다시 한번 linear transformation을 적용합니다.&lt;/li&gt;
+  &lt;li&gt;이때 각각의 position마다 같은 parameter &lt;script type=&quot;math/tex&quot;&gt;W, b&lt;/script&gt;를 사용하지만, layer가 달라지면 다른 parameter를 사용합니다.&lt;/li&gt;
+  &lt;li&gt;kernel size가 1이고 channel이 layer인 convolution을 두 번 수행한 것으로도 위 과정을 이해할 수 있습니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;​&lt;/p&gt;
+
+&lt;h2 id=&quot;positional-encoding&quot;&gt;Positional Encoding&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;transfomer는 recurrence도 아니고 convolution도 아니기 때문에, 단어의sequence를 이용하기 위해서는 단어의 position에 대한 정보를 추가해줄 필요가 있었습니다.&lt;/li&gt;
+  &lt;li&gt;그래서 encoder와 decoder의 input embedding에 &lt;strong&gt;positional encoding&lt;/strong&gt;을 더해줬습니다.&lt;/li&gt;
+  &lt;li&gt;positional encoding은 &lt;script type=&quot;math/tex&quot;&gt;d_{model}&lt;/script&gt;(embedding 차원)과 같은 차원을 갖기 때문에 positional encoding vector와 embedding vector는 더해질 수 있습니다.&lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;논문에서는 다른 *frequency를 가지는 sine과 cosine 함수를 이용했습니다.&lt;/p&gt;
+
+    &lt;p&gt;*주어진 구간내에서 완료되는 cycle의 개수&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;PE_{(pos, 2i)}=sin(pos/10000^{2i/d_{model}})&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;PE_{(pos, 2i+1)}=cos(pos/10000^{2i/d_{model}})&lt;/script&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;script type=&quot;math/tex&quot;&gt;pos&lt;/script&gt;는 position ,&lt;script type=&quot;math/tex&quot;&gt;i&lt;/script&gt;는 dimension 이고 주기가 &lt;script type=&quot;math/tex&quot;&gt;10000^{2i/d_{model}}\cdot2\pi&lt;/script&gt;인 삼각 함수입니다. 즉, &lt;script type=&quot;math/tex&quot;&gt;pos&lt;/script&gt;는 sequence에서 단어의 위치이고 해당 단어는 &lt;script type=&quot;math/tex&quot;&gt;i&lt;/script&gt;에 0부터 &lt;script type=&quot;math/tex&quot;&gt;\frac{d_{model}}{2}&lt;/script&gt;까지를 대입해 &lt;script type=&quot;math/tex&quot;&gt;d_{model}&lt;/script&gt;차원의 positional encoding vector를 얻게 됩니다. &lt;script type=&quot;math/tex&quot;&gt;k=2i+1&lt;/script&gt;일 때는 cosine 함수를, &lt;script type=&quot;math/tex&quot;&gt;k=2i&lt;/script&gt;일 때는 sine 함수를 이용합니다. 이렇게 positional encoding vector를 &lt;script type=&quot;math/tex&quot;&gt;pos&lt;/script&gt;마다 구한다면 비록 같은 column이라고 할지라도 &lt;script type=&quot;math/tex&quot;&gt;pos&lt;/script&gt;가 다르다면 다른 값을 가지게 됩니다. 즉, &lt;script type=&quot;math/tex&quot;&gt;pos&lt;/script&gt;마다 다른 &lt;script type=&quot;math/tex&quot;&gt;pos&lt;/script&gt;와 구분되는 positional encoding 값을 얻게 되는 것입니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;PE_{pos}=[cos(pos/1), sin(pos/10000^{2/d_{model}}),cos(pos/10000)^{2/d_{model}},...,sin(pos/10000)]&lt;/script&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;이때 &lt;script type=&quot;math/tex&quot;&gt;PE_{pos+k}&lt;/script&gt;는 &lt;script type=&quot;math/tex&quot;&gt;PE_{pos}&lt;/script&gt;의 linear function으로 나타낼 수 있습니다. 표기를 간단히 하기 위해 &lt;script type=&quot;math/tex&quot;&gt;c=10000^{\frac{2i}{d_{model}}}&lt;/script&gt;라고 해봅시다. &lt;script type=&quot;math/tex&quot;&gt;sin(a+b)=sin(a)cos(b)+cos(a)sin(b)&lt;/script&gt;이고 &lt;script type=&quot;math/tex&quot;&gt;cos(a + b) = cos (a )cos (b) − sin(a) sin (b)&lt;/script&gt; 이므로 다음이 성립합니다.&lt;/p&gt;
+
+    &lt;script type=&quot;math/tex; mode=display&quot;&gt;PE_{(pos, 2i)}=sin(\frac{pos}{c})&lt;/script&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;PE_{(pos, 2i+1)}=cos(\frac{pos}{c})&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;PE_{(pos+k, 2i)}=sin(\frac{pos+k}{c})=sin(\frac{pos}{c})cos(\frac{k}{c})+cos(\frac{pos}{c})sin(\frac{k}{c}) =PE_{(pos,2i)}cos(\frac{k}{c})+cos(\frac{pos}{c})sin(\frac{k}{c})&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;PE_{(pos+k, 2i+1)}=cos(\frac{pos+k}{c})=cos(\frac{pos}{c})cos(\frac{k}{c})-sin(\frac{pos}{c})sin(\frac{k}{c}) =PE_{(pos,2i+1)}cos(\frac{k}{c})-sin(\frac{pos}{c})sin(\frac{k}{c})&lt;/script&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;이런 성질 때문에 model이 relative position에 의해 attention하는 것을 더 쉽게 배울 수 있습니다.&lt;/li&gt;
+  &lt;li&gt;논문에서는 학습된 positional embedding 대신 sinusoidal version을 선택했습니다.  만약 학습된 positional embedding을 사용할 경우 training보다 더 긴 sequence가 inference시에 입력으로 들어온다면 문제가 되지만 sinusoidal의 경우 constant하기 때문에 문제가 되지 않습니다. 그냥 좀 더 많은 값을 계산하기만 하면 되는거죠.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;​&lt;/p&gt;
+
+&lt;h1 id=&quot;training&quot;&gt;Training&lt;/h1&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;training에 사용된 기법들을 알아보겠습니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;optimizer&quot;&gt;Optimizer&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;많이 쓰이는 Adam optimizer를 사용했습니다.&lt;/li&gt;
+  &lt;li&gt;특이한 점은 learning rate를 training동안 고정시키지 않고 다음 식에 따라 변화시켰다는 것입니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;lrate = d_{model}^{-0.5}\cdot min(step\_num^{-0.5},step\_num \cdot warmup\_steps^{-1.5})&lt;/script&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/lr graph.png&quot; alt=&quot;lr-graph&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;script type=&quot;math/tex&quot;&gt;warmup\_step&lt;/script&gt;까지는 linear하게 learning rate를 증가시키다가, &lt;script type=&quot;math/tex&quot;&gt;warmup\_step&lt;/script&gt; 이후에는 &lt;script type=&quot;math/tex&quot;&gt;step\_num&lt;/script&gt;의 inverse square root에 비례하도록 감소시킵니다.&lt;/li&gt;
+  &lt;li&gt;이렇게 하는 이유는 처음에는 학습이 잘 되지 않은 상태이므로 learning rate를 빠르게 증가시켜 변화를 크게 주다가, 학습이 꽤 됐을 시점에 learning rate를 천천히 감소시켜 변화를 작게 주기 위해서입니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;​&lt;/p&gt;
+
+&lt;h2 id=&quot;regularization&quot;&gt;Regularization&lt;/h2&gt;
+
+&lt;h3 id=&quot;residual-connection&quot;&gt;Residual Connection&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://arxiv.org/abs/1603.05027&quot;&gt;Identity Mappings in Deep Residual Networks&lt;/a&gt;라는 논문에서 제시된 방법이고, 아래의 수식이 residual connection을 나타낸 것입니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;y_l = h(x_l) + F(x_l, W_l)&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;x_{l+1} = f(y_l)&lt;/script&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;이때 &lt;script type=&quot;math/tex&quot;&gt;h(x_l)=x_l&lt;/script&gt;입니다. 논문 제목에서 나온 것처럼 identity mapping을 해주는 것이죠.&lt;/li&gt;
+  &lt;li&gt;특정한 위치에서의 &lt;script type=&quot;math/tex&quot;&gt;x_L&lt;/script&gt;을 다음과 같이 &lt;script type=&quot;math/tex&quot;&gt;x_l&lt;/script&gt;과 residual 함수의 합으로 표시할 수 있습니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;x_2 =x_1+F(x_1,W_1)&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;x_3 =x_2+F(x_2,W_2)=x_1+F(x_1,W_1)+F(x_2,W_2)&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;x_L = x_l+\sum^{L-1}_{i=1} F(x_i, W_i)&lt;/script&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;그리고 미분을 한다면 다음과 같이 됩니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\frac{\sigma\epsilon}{\sigma x_l}= \frac{\sigma\epsilon}{\sigma x_L} \frac{\sigma x_L}{\sigma x_l} = \frac{\sigma\epsilon}{\sigma x_L} (1+\frac{\sigma}{\sigma x_l}\sum^{L-1}_{i=1} F(x_i, W_i))&lt;/script&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;이때, &lt;script type=&quot;math/tex&quot;&gt;\frac{\sigma\epsilon}{\sigma x_L}&lt;/script&gt;은 상위 layer의 gradient 값이 변하지 않고 그대로 하위 layer에 전달되는 것을 보여줍니다. 즉, layer를 거칠수록 gradient가 사라지는 vanishing gradient 문제를 완화해주는 것입니다.&lt;/li&gt;
+  &lt;li&gt;또한 forward path나 backward path를 간단하게 표현할 수 있게 됩니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;layer-normalization&quot;&gt;Layer Normalization&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://arxiv.org/abs/1607.06450&quot;&gt;Layer Normalization&lt;/a&gt;이라는 논문에서 제시된 방법입니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\mu^l = \frac{1}{H}\sum_{i=1}^Ha^l_i&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\sigma^l = \sqrt{\frac{1}{H}\sum_{i=1}^H(a^l_i-\mu^l)^2}&lt;/script&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;같은 layer에 있는 모든 hidden unit은 동일한 &lt;script type=&quot;math/tex&quot;&gt;\mu&lt;/script&gt;와 &lt;script type=&quot;math/tex&quot;&gt;\sigma&lt;/script&gt;를 공유합니다.&lt;/li&gt;
+  &lt;li&gt;그리고 현재 input &lt;script type=&quot;math/tex&quot;&gt;x^t&lt;/script&gt;, 이전의 hidden state &lt;script type=&quot;math/tex&quot;&gt;h^{t-1}&lt;/script&gt;, &lt;script type=&quot;math/tex&quot;&gt;a^t = W_{hh}h^{t-1}+W_{xh}x^t&lt;/script&gt;, parameter &lt;script type=&quot;math/tex&quot;&gt;g, b&lt;/script&gt;가 있을 때 다음과 같이 normalization을 해줍니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;h^t = f[\frac{g}{\sigma^t}\odot(a^t-\mu^t)+b]&lt;/script&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;이렇게 한다면, gradient가 exploding하거나 vanishing하는 문제를 완화시키고 gradient 값이 안정적인 값을 가짐로 더 빨리 학습을 시킬 수 있습니다.&lt;/p&gt;
+
+    &lt;p&gt;​									(논문에서 recurrent를 기준으로 설명했으므로 이에 따랐습니다.)&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;dropout&quot;&gt;Dropout&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;a href=&quot;http://jmlr.org/papers/volume15/srivastava14a.old/srivastava14a.pdf&quot;&gt;Dropout: a simple way to prevent neural networks from overfitting&lt;/a&gt;라는 논문에서 제시된 방법입니다.&lt;/p&gt;
+
+    &lt;p&gt;&lt;img src=&quot;/assets/images/dropout.PNG&quot; alt=&quot;dropout&quot; /&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;dropout&lt;/strong&gt;이라는 용어는 neural network에서 unit들을 dropout하는 것을 가리킵니다. 즉, 해당 unit을 network에서 일시적으로 제거하는 것입니다. 그래서 다른 unit과의 모든 connection이 사라지게 됩니다. 어떤 unit을 dropout할지는 random하게 정합니다.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;dropout은 training data에 overfitting되는 문제를 어느정도 막아줍니다. dropout된 unit들은 training되지 않는 것이니 training data에 값이 조정되지 않기 때문입니다.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;label-smoothing&quot;&gt;Label Smoothing&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://arxiv.org/pdf/1512.00567.pdf&quot;&gt;Rethinking the inception architecture for computer vision&lt;/a&gt;라는 논문에서 제시된 방법입니다.&lt;/li&gt;
+  &lt;li&gt;training동안 실제 정답인 label의 logit은 다른 logit보다 훨씬 큰 값을 갖게 됩니다. 이렇게 해서 model이 주어진 input &lt;script type=&quot;math/tex&quot;&gt;x&lt;/script&gt;에 대한 label &lt;script type=&quot;math/tex&quot;&gt;y&lt;/script&gt;를 맞추는 것이죠.&lt;/li&gt;
+  &lt;li&gt;하지만 이렇게 된다면 문제가 발생합니다. overfitting될 수도 있고 가장 큰 logit을 가지는 것과 나머지 사이의 차이를 점점 크게 만들어버립니다. 결국 model이 다른 data에 적응하는 능력을 감소시킵니다.&lt;/li&gt;
+  &lt;li&gt;model이 덜 confident하게 만들기 위해, label distribution &lt;script type=&quot;math/tex&quot;&gt;q(k \mid x)=\delta_{k,y}&lt;/script&gt;를 (k가 y일 경우 1, 나머지는 0) 다음과 같이 대체할 수 있습니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;q'(k|x)=(1-\epsilon)\delta_{k,y}+\epsilon u(k)&lt;/script&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;각각 label에 대한 분포 &lt;script type=&quot;math/tex&quot;&gt;u(k)&lt;/script&gt;, smooting parameter &lt;script type=&quot;math/tex&quot;&gt;\epsilon&lt;/script&gt;입니다. 위와 같다면, k=y인 경우에도 model은 &lt;script type=&quot;math/tex&quot;&gt;p(y \mid x)=1&lt;/script&gt;이 아니라  &lt;script type=&quot;math/tex&quot;&gt;p(y \mid x)=(1-\epsilon)&lt;/script&gt;이 되겠죠. 100%의 확신이 아닌 그보다 덜한 확신을 하게 되는 것입니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;​&lt;/p&gt;
+
+&lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h1&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;transformer는 recurrence를 이용하지 않고도 빠르고 정확하게 sequential data를 처리할 수 있는 model로 제시되었습니다.&lt;/li&gt;
+  &lt;li&gt;여러가지 기법이 사용됐지만, 가장 핵심적인 것은 encoder와 decoder에서 attention을 통해 query와 가장 밀접한 연관성을 가지는 value를 강조할 수 있고 병렬화가 가능해진 것입니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;​&lt;/p&gt;
+
+&lt;h2 id=&quot;reference&quot;&gt;Reference&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;http://www.whydsp.org/280&lt;/li&gt;
+  &lt;li&gt;http://mlexplained.com/2017/12/29/attention-is-all-you-need-explained/&lt;/li&gt;
+  &lt;li&gt;http://openresearch.ai/t/identity-mappings-in-deep-residual-networks/47&lt;/li&gt;
+  &lt;li&gt;https://m.blog.naver.com/PostView.nhn?blogId=laonple&amp;amp;logNo=220793640991&amp;amp;proxyReferer=https%3A%2F%2Fwww.google.co.kr%2F&lt;/li&gt;
+  &lt;li&gt;https://www.researchgate.net/figure/Sample-of-a-feed-forward-neural-network_fig1_234055177&lt;/li&gt;
+  &lt;li&gt;https://arxiv.org/abs/1603.05027&lt;/li&gt;
+  &lt;li&gt;https://arxiv.org/abs/1607.06450&lt;/li&gt;
+  &lt;li&gt;http://jmlr.org/papers/volume15/srivastava14a.old/srivastava14a.pdf&lt;/li&gt;
+  &lt;li&gt;https://arxiv.org/pdf/1512.00567.pdf&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;script type=&quot;text/javascript&quot; async=&quot;&quot; src=&quot;https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML&quot;&gt; &lt;/script&gt;
+
+&lt;!-- Global site tag (gtag.js) - Google Analytics --&gt;
+&lt;script async=&quot;&quot; src=&quot;https://www.googletagmanager.com/gtag/js?id=UA-103074382-1&quot;&gt;&lt;/script&gt;
+
+&lt;script&gt;
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-103074382-1');
+&lt;/script&gt;
+
+</description>
+        <pubDate>Sat, 15 Sep 2018 00:00:00 +0900</pubDate>
+        <link>http://localhost:4000/transformer/</link>
+        <guid isPermaLink="true">http://localhost:4000/transformer/</guid>
+        
+        <category>transformer</category>
+        
+        <category>attention</category>
+        
+        <category>attention is all you need</category>
+        
+        <category>paper</category>
+        
+        <category>review</category>
+        
+        
+        <category>blog</category>
+        
+      </item>
+    
+      <item>
+        <title>Activation Function</title>
+        <description>&lt;h1 id=&quot;activation-function활성함수&quot;&gt;Activation Function(활성함수)&lt;/h1&gt;
+
+&lt;p&gt;인공신경망을 공부하다보면 &lt;strong&gt;활성함수(activation function)&lt;/strong&gt;라는 것을 만나게 됩니다. 대부분의 분들은 처음 공부를 시작할 때, 저와 마찬가지로 활성함수는 그냥 이런 거구나 하신 뒤에 넘어가고 있을 거라 생각합니다. 하지만 딥러닝을 좀더 공부하다보면 어떤 활성함수를 사용했는지, 혹은 사용하지 않았는지로 인해 다양한 문제가 발생하곤 합니다. 특히 요즘 핫한 deep neural network 에서는 활성함수가 어떤 것인가에 따라서 &lt;a href=&quot;#&quot;&gt;&lt;strong&gt;vanishing gradient&lt;/strong&gt;&lt;/a&gt; 문제로 인해 학습의 정도가 달라지기도 합니다. 이러한 이유에서 이번 포스팅에서는 활성함수를 자세히 이해해보도록 하겠습니다.&lt;/p&gt;
+
+&lt;p&gt;인공신경망이 사람의 신경구조를 모방하여 만들어졌다는 사실은 다들 알고 계실겁니다. 인공신경망의 가장 기본 개념은 &lt;a href=&quot;#&quot;&gt;단일 퍼셉트론&lt;/a&gt;에서 출발했습니다. 관련된 포스팅에서도 설명했지만 퍼셉트론은 여러 개의 신호가 들어오면 이를 조합하여 다음으로 신호를 보낼지 말지를 결정합니다(0 또는 1). 이것을 발전시킨 &lt;a href=&quot;#&quot;&gt;&lt;strong&gt;feed forward multiple layer neural network&lt;/strong&gt;&lt;/a&gt;는 하나의 단일 뉴런에 여러 신호가 들어오면, 다음 뉴런에 보낼 &lt;strong&gt;신호의 강도&lt;/strong&gt;를 결정하게 됩니다. 즉, 단일 퍼셉트론이 multi layer perceptron으로 발전해나가는 과정에서, 뉴런은 신호의 전달유무가 아닌 전달 강도를 정하게 되었습니다. 이때 전달하는 신호의 세기를 정하는 방법이 &lt;strong&gt;활성함수&lt;/strong&gt;입니다.&lt;/p&gt;
+
+&lt;p&gt;많은 분들은 대표적인 활성함수로 &lt;strong&gt;sigmoid&lt;/strong&gt;를 떠올리실 것입니다. 활성함수의 개념을 잡기에는 이만큼 좋은 함수가 없기 때문입니다. 그럼 우선 활성함수의 가장 기본적인 개념을 &lt;strong&gt;sigmoid&lt;/strong&gt;를 통해 알아보도록 하죠. 그 전에 여러분의 이해를 돕기 위해 로지스틱 회귀분석에 대해 먼저 알아보겠습니다.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;로지스틱-회귀분석logistic-regression&quot;&gt;로지스틱 회귀분석(logistic regression)&lt;/h2&gt;
+
+&lt;p&gt;로지스틱 회귀분석은 &lt;strong&gt;generalized linear model&lt;/strong&gt;입니다. 정확히 말하자면 generalized linear model이라는 큰 개념의 여러 케이스 중 하나라고 볼 수 있겠네요. 로지스틱 회귀분석의 목적은 독립변수의 선형결합으로 종속변수인 ‘어떠한 사건이 발생할 확률’을 알고자 하는 것입니다. 어렵죠..? 쉬운 예시를 하나 들어보겠습니다.&lt;/p&gt;
+
+&lt;p&gt;우리는 어떠한 연구를 통해 1일 흡연량과 폐암 발생 여부의 관계를 알고싶습니다. 이때 가장 쉬운 방법은 &lt;strong&gt;1일 흡연량{x}&lt;/strong&gt;과 &lt;strong&gt;폐암 발생확률{p(y)}&lt;/strong&gt;이 선형 관련성이 있다고 보고, 선형 회귀 분석(linear regression)을 시행하는 것입니다. 그 결과, &lt;script type=&quot;math/tex&quot;&gt;p(y) = 0.02x + 0.1&lt;/script&gt; 이라는 식이 도출되었다고 생각해보죠. 
+이 식은 담배를 전혀 안 피우는 사람은 10%의 확률로 폐암에 걸리고, 하루에 담배를 1개비씩 더 피울 때마다 폐암에 걸릴 확률이 2% 증가한다는 의미입니다. 표면적으로 보았을 때는 꽤나 합리적으로 보입니다. 하지만 과연 이 식을 실제 예측에 활용해도 전혀 문제가 없을까요? 예상하셨겠지만, 그렇지 않습니다.&lt;/p&gt;
+
+&lt;p&gt;담배는 한 갑에 20개비가 들어있고, 3갑이면 60개비가 들어있습니다. 따라서 하루에 담배를 3갑 피우는 사람은 &lt;script type=&quot;math/tex&quot;&gt;0.02*60 + 0.1 = 1.3&lt;/script&gt;, 즉 &lt;strong&gt;130%의 확률로 폐암에 걸린다&lt;/strong&gt;는 결론이 도출됩니다. 이는 확률의 공리에 어긋나는 결론입니다. 따라서 과거의 수학자들은 선형이라는 이해 및 계산이 쉬운 방법을 그대로 유지하면서 확률의 공리에 어긋나지 않는 방법을 찾고자하였고, 다양한 방법들 중 가장 보편적으로 사용하게 된 방법이 로지스틱 함수를 연결함수로 사용한 &lt;strong&gt;로지스틱 회귀분석&lt;/strong&gt;입니다.&lt;/p&gt;
+
+&lt;p&gt;로지스틱 함수는 아래와 같이 생겼습니다.&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;g(x)\quad =\quad \frac { { e }^{ x } }{ 1+{ e }^{ x } }&lt;/script&gt;
+
+&lt;p&gt;이것을 연결함수로 적용한 generalized linear model, 즉 logistic regression의 수식은 아래와 같은 형태가 됩니다.&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;P(y|x)\quad =\quad \frac { { e }^{ \beta x } }{ 1+{ e }^{ \beta x } }&lt;/script&gt;
+
+&lt;p&gt;위 식을 이용하면 비로소 선형이라는 직관적인 성질을 띄면서, 결과값의 범위가 0~1로 제한되어 확률값의 예측에 사용할 수 있는 회귀식이 도출됩니다. 이 때, 위에 사용한 로지스틱 함수가 바로 우리가 활성함수로 사용하는 sigmoid function입니다. 따라서 sigmoid를 활성함수로 사용할 경우, 필연적으로 로지스틱 회귀분석과 관련이 있을 것이라고 예상할 수 있습니다. 둘 간의 관련성을 아래 그림을 통해 알아보겠습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/Activation_function/activation1.png&quot; alt=&quot;activation1.png&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;여러분의 이해를 돕고자 hidden layer가 없는 가장 단순한 형태의 feed forward neural network 형태를 그려보았습니다. 위 그림을 수식으로 나타내볼까요?&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;P(Y|X)\quad =\quad \frac { exp(\sum _{ i=0 }^{ 2 }{ { w }_{ i }{ x }_{ i } } ) }{ 1+exp(\sum _{ i=0 }^{ 2 }{ { w }_{ i }{ x }_{ i } } ) } \quad =\quad \frac { 1 }{ 1+exp(-\sum _{ i=0 }^{ 2 }{ { w }_{ i }{ x }_{ i } } ) }&lt;/script&gt;
+
+&lt;p&gt;즉, 위처럼 sigmoid를 활성함수로 사용한 간단한 neural network는 logistic regression과 일치합니다. 물론 계수(weight) 추정 방법은 통계학에서 기존에 행하던 방법과는 차이가 있지만, 결과적으론 비슷한 값이 추정될 것입니다. 우리는 이 그림을 통해 아래와 같은 직관을 얻을 수 있습니다.&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;input과 weight를 곱해서 더하는 과정은 linear combination(선형 결합)이다.&lt;/li&gt;
+  &lt;li&gt;인공신경망의 학습은 각 뉴런에 곱해지는 ‘weight’라는 &lt;strong&gt;모수(parameter)&lt;/strong&gt;를 &lt;strong&gt;추정(estimate)&lt;/strong&gt;하는 과정이다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;이제 눈치 채셨나요? Sigmoid를 활성함수로 사용하는 multi layer perceptron neural network의 hidden layer의 각 뉴런은 로지스틱 회귀분석을 하는 것과 정확히 일치합니다. 따라서 학습 과정에서 각 layer의 weight라는 모수를 학습을 통해 추정하는 것입니다.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;mlp-적용&quot;&gt;mlp 적용&lt;/h2&gt;
+&lt;p&gt;그럼 이제 위에서 배운 로지스틱 회귀분석을 mlp에 적용해보겠습니다. 우리는 &lt;a href=&quot;#&quot;&gt;&lt;strong&gt;단층 퍼셉트론&lt;/strong&gt;&lt;/a&gt; 에서 아래와 같은 그림을 보았습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/Activation_function/activation function2.jpg&quot; alt=&quot;activation function2.jpg&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;위처럼 선형으로 깔끔하게 분류가 가능한 문제는 활성함수가 계단함수인 단층 퍼셉트론으로도 충분히 해결할 수 있습니다. 하지만 아래와 같은 경우는 문제가 달라집니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/Activation_function/activation function3.jpg&quot; alt=&quot;activation function3.jpg&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;이러한 분류 문제는 선형으로는 불가능하며, 비선형적인 분류를 하여야 합니다. 이처럼 우리가 원하는 비선형의 분류를 하기 위하여 크게 두 가지가 필요합니다.&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;1개 이상의 hidden layer(2개 이상의 뉴런을 포함하여야 함)&lt;/li&gt;
+  &lt;li&gt;비선형의 활성함수&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;먼저 비선형의 활성함수가 필요한 이유부터 간단하게 생각해보겠습니다. 만약 활성함수가 비선형이 아니라면, 각 뉴런의 결과값은 선형결합의 선형결합이 됩니다. 따라서 아무리 multiple layer를 쌓는다고 하여도, 결과적으로 출력값은 입력값들의 선형결합이 됩니다. 즉, 층을 여러 개 쌓는 의미가 퇴색되는 것입니다.&lt;/p&gt;
+
+&lt;p&gt;다음으로 hidden layer와 뉴런의 갯수에 대한 정의가 왜 필요한지 생각해보겠습니다. 위에서 언급하였듯이 logistic regression은 generalized linear model입니다. 여기서 ‘linear model’에 주목해주세요. 즉, logistic regression도 결국은 선형 모델이라는 것입니다. 왜일까요? Logistic regression을 이항분류 문제(결과의 범주가 0 또는 1)에 적용하여, 결과값이 특정값 이상이면 1로 분류한다고 생각해보겠습니다. 이것은 결국 기존의 단일 퍼셉트론에서 활성함수로 sigmoid를 사용한 뒤, 다시 계단함수를 적용한 것과 같습니다. 비록 우리가 sigmoid라는 비선형의 활성함수를 사용했지만, 로지스틱 함수의 지수를 풀어내면 결국 선형 결합의 결과값에 대한 분류이므로 우리가 원하는 비선형의 분류를 할 수 없습니다. 따라서 위와같은 문제를 해결하기 위하여, 비선형의 활성함수를 쓰되, 다수의 뉴런을 갖는 hidden layer를 사용하는 것입니다. 이 때, hidden layer의 뉴런 갯수가 늘어날 수록 좀더 비선형으로 데이터에 적합한 분류가 가능해지지만 &lt;strong&gt;overfitting&lt;/strong&gt; 문제가 발생하게 됩니다. 따라서 hidden layer의 뉴런 갯수를 과제마다 적절히 지정해주는 것이 중요합니다.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;activation-function의-종류&quot;&gt;activation function의 종류&lt;/h2&gt;
+
+&lt;p&gt;마지막으로 activation function의 종류 및 특징에 대해 정리해보겠습니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;1-sigmoid-function&quot;&gt;1. Sigmoid function&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Logistic-curve.svg/1200px-Logistic-curve.svg.png&quot; alt=&quot;Logistic-curve.svg&quot; /&gt;&lt;br /&gt;By &lt;a href=&quot;//commons.wikimedia.org/wiki/User:Qef&quot; title=&quot;User:Qef&quot;&gt;Qef&lt;/a&gt; (&lt;a href=&quot;//commons.wikimedia.org/wiki/User_talk:Qef&quot; title=&quot;User talk:Qef&quot;&gt;talk&lt;/a&gt;) - Created from scratch with gnuplot, Public Domain, &lt;a href=&quot;https://commons.wikimedia.org/w/index.php?curid=4310325&quot;&gt;Link&lt;/a&gt;&lt;/p&gt;
+
+&lt;h4&gt;&lt;특징&gt;&lt;/특징&gt;&lt;/h4&gt;
+&lt;ul&gt;
+  &lt;li&gt;수식 : &lt;script type=&quot;math/tex&quot;&gt;\sigma (wx+b)=\frac { { e }^{ wx+b } }{ 1+{ e }^{ wx+b } }&lt;/script&gt;&lt;/li&gt;
+  &lt;li&gt;범위 : (0,1)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;시그모이드 함수는 완전히 값을 전달하지 않거나(0) 혹은 완전히 전달한다(1)는 특성 때문에 실제 인체의 뉴런과 유사하다고 생각되어 널리 사용되었으나, 현재는 점차 사용하지 않는 추세입니다. 그 이유는 아래와 같습니다.&lt;/p&gt;
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;Vanishing Gradient&lt;/strong&gt; :&lt;/p&gt;
+
+    &lt;p&gt;sigmoid 함수는 뉴런의 활성화 값이 0 또는 1에 매우 가깝다면(saturate), 해당 편미분 값이 0에 매우 가까워지는 특성이 있습니다. 인공신경망의 back propagation에서 가장 일반적으로 사용되는 gradient descent의 경우 chain rule을 이용하는데, 이 과정에서 0에 매우 작은 값이 계속 곱해진다면 그 값은 0으로 점점 더 수렴합니다. 즉, 학습의 결과가 back propagation 과정에서 전달되지 못하고 이에 따라 weight 값의 조정이 되지 않습니다. 이것은 학습의 과정뿐만 아니라, 초기 weight 값을 임의로 줄 때에도 문제가 됩니다. &lt;script type=&quot;math/tex&quot;&gt;f=\sigma (wx+b)&lt;/script&gt; 를 통해 확인해보죠. 만약 w의 값이 매우 커서 &lt;script type=&quot;math/tex&quot;&gt;\sigma (wx+b)&lt;/script&gt;의 값이 1에 매우 가까워 진다면, weight값은 초기 값에서 크게 변하지 않고 학습이 되지 않을 것입니다. 그럼 우리의 신경망 모델의 정확성도 감소하겠죠. 이것이 vanishing gradient problem입니다.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;중심값이 0이 아니다&lt;/strong&gt; :&lt;/p&gt;
+
+    &lt;p&gt;Sigmoid function의 결과값은 그 중점이 0이 아니며, 모두 양수입니다. 이 경우 모수를 추정하는 학습이 어렵다는 단점이 있습니다. 하지만 이것은 다른 방식으로 모델 내에서 극복이 가능하기 때문에 vanishing gradient 에 비해 큰 문제는 아닙니다.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h3 id=&quot;2-tanh-function&quot;&gt;2. tanh function&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/Activation_function/tanh.png&quot; alt=&quot;tanh.png&quot; /&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;-1&quot;&gt;&lt;특징&gt;&lt;/특징&gt;&lt;/h4&gt;
+&lt;ul&gt;
+  &lt;li&gt;수식 : &lt;script type=&quot;math/tex&quot;&gt;tanh(x)=\frac { { e }^{ 2x }-1 }{ { e }^{ 2x }+1 }&lt;/script&gt;&lt;/li&gt;
+  &lt;li&gt;범위 : (-1,1)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;tanh(hyperbolic tangent) function은 sigmoid 처럼 비선형 함수이지만 결과값의 범위가 -1부터 1이기 때문에 sigmoid와 달리 중심값이 0입니다. 따라서 sigmoid보다 optimazation이 빠르다는 장점이 있고, 항상 선호됩니다. 하지만 여전히 vanishing gradient 문제가 발생하기 때문에 대안이 등장하게 됩니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;3-relurectified-linear-unit&quot;&gt;3. Relu(Rectified Linear Unit)&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/Activation_function/relu.png&quot; alt=&quot;relu.png&quot; /&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;-2&quot;&gt;&lt;특징&gt;&lt;/특징&gt;&lt;/h4&gt;
+&lt;ul&gt;
+  &lt;li&gt;수식 : &lt;script type=&quot;math/tex&quot;&gt;y = max(0,x)&lt;/script&gt;&lt;/li&gt;
+  &lt;li&gt;범위 : (0,&lt;script type=&quot;math/tex&quot;&gt;\infty&lt;/script&gt;)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Relu는 위 그림처럼 선형그래프를 한 번 꺾은 형태입니다. 이 간단한 함수는 오랫동안 인공신경망의 발목을 잡던 vanishing gradient 문제를 해결했습니다. 하지만 여전히 장점과 단점이 존재합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;장점&lt;/strong&gt;&lt;/p&gt;
+&lt;ol&gt;
+  &lt;li&gt;기존의 sigmoid, tanh에 비해 &lt;strong&gt;converge되는 속도가 빠릅니다&lt;/strong&gt;. 이것은 그래프의 형태가 선형이고, saturate problem이 발생하지 않기 때문으로 보여집니다.&lt;/li&gt;
+  &lt;li&gt;x값이 0을 기준으로 선형발현/미발현 이라는 간단한 형태이기 때문에 상대적으로 연산량이 많은 exponential을 사용하지 않아, 컴퓨터의 &lt;strong&gt;연산에 대한 부담을 줄여줍니다&lt;/strong&gt;.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;strong&gt;단점&lt;/strong&gt;&lt;/p&gt;
+&lt;ol&gt;
+  &lt;li&gt;&lt;strong&gt;“dying Relu problem”&lt;/strong&gt;이 발생합니다. 만일 학습 과정에서 weight가 특정 뉴런이 activate되지 않도록 바뀐다면, 해당 뉴런을 지나는 gradient도 0이 됩니다. 따라서 training 과정에서 해당 뉴런이 한 번도 발현하지 않게 될 수도 있습니다. 심한 경우에는 네트워크 전체 뉴런의 40%가 죽어있는 경우도 발생한다고 합니다(출처 : &lt;a href=&quot;http://cs231n.github.io/neural-networks-1/&quot;&gt;http://cs231n.github.io/neural-networks-1/&lt;/a&gt;). 이것을 막기 위해서는 learning rate를 크지 않게 조절하는 것이 중요합니다. 또 다른 해결 방안으로는 &lt;strong&gt;leaky relu&lt;/strong&gt;와 같은 activation function을 사용할 수도 있습니다.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;hr /&gt;
+
+&lt;h1 id=&quot;정리&quot;&gt;정리&lt;/h1&gt;
+
+&lt;p&gt;이번 포스팅을 통해 우리는 activation function이 무엇이고, 왜 필요한 것인지 알아보았습니다. 또한 어떠한 activation을 어떻게 사용해야하는지도 배웠습니다. 제가 위에 소개한 것 이외에도 다양한 activation function이 있으므로, 한 번쯤 찾아보며 공부해보시면 좋겠습니다.&lt;/p&gt;
+
+&lt;script type=&quot;text/javascript&quot; async=&quot;&quot; src=&quot;https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML&quot;&gt; &lt;/script&gt;
+
+&lt;!-- Global site tag (gtag.js) - Google Analytics --&gt;
+&lt;script async=&quot;&quot; src=&quot;https://www.googletagmanager.com/gtag/js?id=UA-103074382-1&quot;&gt;&lt;/script&gt;
+
+&lt;script&gt;
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-103074382-1');
+&lt;/script&gt;
+
+</description>
+        <pubDate>Wed, 16 Aug 2017 00:00:00 +0900</pubDate>
+        <link>http://localhost:4000/Activation_Function/</link>
+        <guid isPermaLink="true">http://localhost:4000/Activation_Function/</guid>
+        
+        <category>Perceptron</category>
+        
+        <category>MLP</category>
+        
+        <category>Activation Function</category>
+        
+        <category>Logistic Regression</category>
+        
+        <category>tensorflow</category>
+        
+        
+        <category>blog</category>
+        
+      </item>
+    
+      <item>
+        <title>Single Layer Perceptron</title>
+        <description>&lt;h1 id=&quot;single-layer-perceptron&quot;&gt;Single Layer Perceptron&lt;/h1&gt;
+
+&lt;p&gt;이번 포스팅에서는 모든 인공신경망의 기초가 되는 &lt;strong&gt;perceptron&lt;/strong&gt;의 개념에 대해서 배워보고, 이를 이용한 단층 퍼셉트론 구조를 구현해보도록 하겠습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;퍼셉트론&lt;/strong&gt;은 여러분이 고등학교 과학시간에 한 번쯤은 들어보았을 인간의 신경망, 뉴런으로부터 고안되었습니다. 퍼셉트론은 여러 개의 신호를 입력받으면, 하나의 신호를 출력합니다. 이 때 퍼셉트론이 출력하는 신호는 전달 혹은 차단이라는 1 또는 0의 값을 갖게됩니다. 직관적인 예시를 들어보도록 하죠. 여러분이 매달 초 용돈, 아르바이트비를 받거나(1) 받지 않는다(0)고 가정해보겠습니다. 여러분의 통장에 입금된 이 두 가지 수익을 &lt;strong&gt;input(입력) 신호&lt;/strong&gt;라고 합니다. 이 때 여러분은 두 개의 수익이 합쳐진 통장 잔고를 확인하고 전부터 갖고 싶던 옷을 살지(1) 혹은 사지 않을지(0)를 결정합니다. 이렇게 여러분이 내리는 결정이 &lt;strong&gt;output(출력) 신호&lt;/strong&gt;가 되는 것입니다.&lt;/p&gt;
+
+&lt;p&gt;하지만 여러분의 의사결정은 이것보다는 복잡할 것입니다. 용돈은 거의 생활비로만 사용하고, 아르바이트비를 주로 취미생활에 사용한다고 가정해보죠. 그럼 여러분이 옷을 살지 여부를 결정할 때에는 아르바이트비가 들어왔는지가 좀더 중요할 것입니다. 따라서 우리는 각 input(입력) 신호를 그대로 사용하지 않고, 각각에 &lt;strong&gt;가중치(weight)&lt;/strong&gt;를 주어 output(출력) 신호를 결정하게 됩니다. 이것을 도식으로 나타내면 다음과 같습니다.
+&lt;img src=&quot;/assets/images/single_layer_perceptron/graph_2.jpg&quot; alt=&quot;graph_2.jpg&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;이처럼 input에 weight가 곱해진 형태가 정해진(혹은 학습된) 임계치를 넘을 경우 1을 출력하고 그렇지 않을 경우 0을 출력하게 하는 것이 퍼셉트론의 동작 원리입니다. 정말 간단하죠! 이는 아래 수식과 같습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/single_layer_perceptron/formula_1.jpg&quot; alt=&quot;formula1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;하지만 임계치를 그때그때 바꿔주는 것은 조금 직관적이지 않습니다(저만 그런가요). 그래서 우리는 아래 형태로 식을 바꾸게 되며, 이 때 추가된 b를 bias 혹은 절편이라고 말합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/single_layer_perceptron/formula_2.jpg&quot; alt=&quot;formula2&quot; /&gt;
+&lt;img src=&quot;/assets/images/single_layer_perceptron/graph_3.jpg&quot; alt=&quot;graph_3.jpg&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;위 식은 여러분이 중고등학교 수학 수업을 잘 들었다면 굉장히 익숙한 형태일 것입니다. 바로 2차원 좌표축을 그리고 직선을 그었을 때, 그 직선을 기준으로 나뉘는 두 개의 공간을 표현한 식입니다. 역시 말보다는 그림이 이해하기 쉬울테니, 아래에 그림을 그려보도록 하겠습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/single_layer_perceptron/graph_1.jpg&quot; alt=&quot;graph_1.jpg&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;위처럼 공간을 올곧은 직선으로 나누는 것을 선형으로 나눴다고 말합니다. 하지만 직선만으로 공간을 나누는 것은 유연하지 않습니다. 위와 같은 방식으로는 OR, AND, NAND 문제는 해결할 수 있지만, XOR 문제는 해결할 수 없습니다. 이와 같은 문제를 해결하기 위해서는 층을 하나 더 쌓고, 공간을 단순한 선형이 아닌 곡선으로 분리해내어 좀더 유연한 적용이 가능해져야합니다.(사실 XOR은 선형만으로도 층을 하나 더 쌓으면 해결이 가능합니다). 이에 따라 &lt;a href=&quot;#&quot;&gt; &lt;strong&gt;multi layer perceptron(MLP)&lt;/strong&gt; &lt;/a&gt;의 개념이 등장하고, &lt;a href=&quot;#&quot;&gt; &lt;strong&gt;activation function(활성함수)&lt;/strong&gt; &lt;/a&gt;의 개념이 등장하게 됩니다. 후에 활성함수의 개념을 배우게 되면, 지금 배운 단순 퍼셉트론은 활성함수로 계단함수를 가진 것과 동일하다는 것을 알게 되실겁니다.&lt;/p&gt;
+
+&lt;hr /&gt;
+&lt;h3 id=&quot;정리&quot;&gt;정리&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;단층 퍼셉트론은 모든 딥러닝 공부의 시작이다.&lt;/li&gt;
+  &lt;li&gt;단층 퍼셉트론은 입력 신호를 받으면 임계치에 따라 0 또는 1의 값을 출력한다.&lt;/li&gt;
+  &lt;li&gt;이러한 단층 퍼셉트론은 결국 공간을 선형으로 잘라서 구분하는 것과 동일하다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;!-- Global site tag (gtag.js) - Google Analytics --&gt;
+&lt;script async=&quot;&quot; src=&quot;https://www.googletagmanager.com/gtag/js?id=UA-103074382-1&quot;&gt;&lt;/script&gt;
+
+&lt;script&gt;
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-103074382-1');
+&lt;/script&gt;
+
+</description>
+        <pubDate>Thu, 20 Jul 2017 00:00:00 +0900</pubDate>
+        <link>http://localhost:4000/single-layer-pereptron/</link>
+        <guid isPermaLink="true">http://localhost:4000/single-layer-pereptron/</guid>
+        
+        <category>Perceptron</category>
+        
+        <category>MLP</category>
+        
+        <category>tensorflow</category>
+        
+        
+        <category>blog</category>
+        
+      </item>
+    
+      <item>
+        <title>LSTM Tutorial</title>
+        <description>&lt;h2 id=&quot;summary&quot;&gt;Summary:&lt;/h2&gt;
+
+&lt;p&gt;이 포스팅은 LSTM에 대한 기본 개념을 소개하고, tensorflow와 MNIST 데이터를 이용하여 구현해봅니다.&lt;/p&gt;
+
+&lt;h2 id=&quot;lstm&quot;&gt;LSTM&lt;/h2&gt;
+
+&lt;h3 id=&quot;1-개념-설명&quot;&gt;1. 개념 설명&lt;/h3&gt;
+
+&lt;p&gt;LSTM(Long Short Term Memory)은 RNN(Recurrent Neural Networks)의 일종으로서, 시계열 데이터, 즉 sequential data를 분석하는 데 사용됩니다.&lt;/p&gt;
+
+&lt;p&gt;기존 RNN모델은 구조적으로 vanishing gradients라는 문제를 가지고 있습니다. RNN은 기본적으로 Neural network이기 때문에 chain rule을 적용하여 backpropagation을 수행하고, 예측값과 실제 결과값 사이의 오차를 줄여나가면서 각 시간 단계의 gradient를 조정합니다. 그런데, 노드와 노드(시간 단계) 사이의 길이가 길어지다보면, 상대적으로 이전의 정보가 희석됩니다. 이 문제는 시퀀스 상 멀리 떨어져 있는 요소, 즉 오래 전에 발생한 이벤트 사이의 연관성을 분석할 수 없도록 만듭니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/LSTM_MNIST_00.png&quot; alt=&quot;LSTM structure&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;LSTM은 RNN의 문제를 셀상태(Cell state)와 여러 개의 게이트(gate)를 가진 셀이라는 유닛을 통해 해결합니다. 이 유닛은 시퀀스 상 멀리 있는 요소를 잘 기억할 수 있도록 합니다. 셀상태는 기존 신경망의 은닉층이라고 생각할 수 있습니다. 셀상태를 갱신하기 위해 기본적으로 3가지의 게이트가 필요합니다. Forget, input, output 게이트는 각각 다음과 같은 역할을 합니다.&lt;/p&gt;
+
+&lt;p&gt;Forget : 이전 단계의 셀 상태를 얼마나 기억할 지 결정합니다. 0(모두 잊음)과 1(모두 기억) 사이의 값을 가지게 됩니다.
+ Input : 새로운 정보의 중요성에 따라 얼마나 반영할지 결정합니다.
+ Output : 셀 상태로부터 중요도에 따라 얼마나 출력할지 결정합니다.&lt;/p&gt;
+
+&lt;p&gt;게이트는 가중치(weight)를 가진 은닉층으로 생각할 수 있습니다. 각 가중치는 sigmoid층에서 갱신되며 0과 1사이의 값을 가지고 있습니다. 이 값에 따라 입력되는 값을 조절하고, 오차에 의해 각 단계(time step)에서 갱신됩니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;2-응용-mnist-data&quot;&gt;2. 응용 (MNIST data)&lt;/h3&gt;
+
+&lt;p&gt;MNIST는 손으로 쓴 숫자 이미지 데이터입니다. 하나의 이미지는 가로 28개, 세로 28개, 총 784개의 값으로 이루어져 있습니다.&lt;/p&gt;
+
+&lt;p&gt;Many-to-One model는 여러 시퀀스를 넣었을 때 나오는 최종 결과물만을 이용하는 모델입니다. 이를 이용하여 784개의 input으로 1개의 output값(A) 을 도출합니다. 이 A를 하나의 층에 통과시켜 10개의 숫자 label중 하나를 할당합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/LSTM_MNIST_01.png&quot; alt=&quot;LSTM structure1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;784개의 입력값을 사이즈가 28인 벡터가 28번 이어지는 시퀀스(time step)로 보고, input의 크기를 28, 시퀀스 길이를 28로 각각 설정합니다. 28개의 input은 C라고 표현되어 있는 LSTM 셀로 순차적으로 들어가게 됩니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/LSTM_MNIST_02.png&quot; alt=&quot;LSTM structure2&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;output의 크기는 셀의 크기와 같으며, 64로 설정하였습니다. 셀크기가 너무 작으면 많은 정보를 담지 못하기 때문에 적당히 큰 값으로 설정합니다. 전체 output은 64개의 값을 가지고 있는 벡터 28개의 집합이 되고, 마지막 벡터만 사용합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/LSTM_MNIST_03.png&quot; alt=&quot;LSTM structure3&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;1층의 fully connected layer를 이용하여 64차원 벡터를 10차원으로 줄이고 softmax를 이용하여 0부터 9까지 중 하나의 값을 예측합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/LSTM_MNIST_04.png&quot; alt=&quot;LSTM structure4&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;LSTM으로부터 나온 예측값을 실제갑과 비교하여 cost를 개산합니다. cost function은 cross-entropy를 이용합니다. AdamOptimizer를 이용하여 cost를 최소화하는 방향으로 모델을 최적화 시킵니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;3-토의&quot;&gt;3. 토의&lt;/h3&gt;
+&lt;p&gt;구현 시 어려웠던 점을 중심으로 서술하였습니다. 전체 코드는 &lt;a href=&quot;https://github.com/POZAlabs/Tutorial_Tensorflow/blob/master/LSTM.py&quot;&gt;여기&lt;/a&gt;를 참고해주세요.&lt;/p&gt;
+
+&lt;h4 id=&quot;batch-size&quot;&gt;&lt;strong&gt;batch size&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;batch_size&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;128&lt;/span&gt; 
+
+&lt;span class=&quot;n&quot;&gt;batch_x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;batch_y&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mnist&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;train&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;next_batch&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;batch_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;MNIST의 train data의 크기는 55,000개 입니다. 이는 (55000, 784) 크기의 데이터를 학습시켜야 한다는 것을 의미합니다. 이것을 한번에 학습시킨다는 것은 매우 어려운 일입니다. 전체 데이터를 메모리에 올리기 힘들뿐만 아니라, 너무 큰 data 한번에 학습시키면 가장 작은 cost값으로 수렴하기 힘들어진다는 문제가 있습니다. (너무 작아도 마찬가지입니다.) 그렇기 때문에 큰 덩어리를 일정크기의 작은 덩어리로 잘라서 모델에 넣어 학습시는데, 이 작은 덩어리의 크기를 batch size라고 합니다.&lt;/p&gt;
+
+&lt;p&gt;작은 덩어리로 짜르는 것이 중요한 이유는, 작은 덩어리 단위로 모델에 밀어넣고(propagation) 네트워크의 파라미터들을 조정(update)하기 때문입니다. batch size는 분석하려고 하는 데이터가 어떻게 구성되어있는지에 따라 결정되는 경우가 많습니다. 어떤 수준의 batch size가 좋다고 이야기하기 어렵고, 아주 크지 않은 값으로 설정합니다.&lt;/p&gt;
+
+&lt;h4 id=&quot;unstack&quot;&gt;&lt;strong&gt;unstack&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;모델 구현 시 static RNN을 사용하였습니다. Static RNN에서는 unstack을 해주지 않으면 TypeError가 발생합니다.&lt;/p&gt;
+
+&lt;p&gt;unstack( value, num=none, axis=0, name=‘unstack’)&lt;/p&gt;
+
+&lt;p&gt;unstack은 R차원(rank)의 데이터를 R-1 차원으로 줄여주는 역할을 합니다. value로부터 axis 차원을 기준으로 num개로 자른다고도 할 수 있습니다. 이 예제로 예를 들어보겠습니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;batch_x&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;batch_x&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;reshape&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;batch_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;input_steps&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;input_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tf&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;unstack&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;X&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;input_steps&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;axis&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;outputs1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;states1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tf&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;nn&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;static_rnn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;lstm_cell&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;dtype&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tf&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;float32&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;실제 학습이 진행되는 순서로 보자면, batch size만큼 불러온 인풋 데이터는 (128, 784)에서 (128, 28, 28) 형식의 3차원 벡터로 reshape해 줍니다. 그리고 다시 unstack을 통해 time step을 기준으로(axis=1) 28개의 텐서를 만듭니다. 다시말해, (128, 28, 28)이라는 3차원 형식의 벡터는 (128, 28)이라는 2차원 벡터 28개로 변환되어 모델에 입력되게 됩니다. 이런 변환이 필요한 이유는 28*28의 크기를 가진input들을 차례로 넣게 되면 처리속도가 제한적이기 때문입니다. unstack을 이용하면 하나의 batch 안에 있는 input을 한꺼번에 한줄씩 병렬적으로 처리할 수 있게 됩니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/LSTM_MNIST_05.png&quot; alt=&quot;BLSTM structure1&quot; /&gt;
+Dynamic RNN에서는 unstack을 해주는 과정이 필요 없습니다. Static과 Dynamic의 차이는 추후 포스팅에서 자세히 다루도록 하겠습니다.&lt;/p&gt;
+
+&lt;h4 id=&quot;training-cycle&quot;&gt;&lt;strong&gt;Training cycle&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;참고한 다른 예제코드들은 서로 다른 스타일의 사이클로 학습시키고 있었습니다. 스타일은 크게 두가지로 나누어볼 수 있었습니다. 하나의 방법은 전체 학습 횟수를 정해놓고 while문을 통해 학습시키는 방법이었습니다. 다른 방법은 똑같은 데이터를 몇번 반복해서 학습시킬지 결정하는 것입니다. 이 반복 횟수를 epoch이라고 합니다. epoch의 사전적 의미는 ‘시대’ 또는 ‘세’이지만 예제 코드에서 만나는 epoch은 전체 데이터를 학습시키는 반복회수라고 이해하시면 되겠습니다. (이 두가지 방법은 스타일의 문제일 뿐입니다. 이것을 언급한 이유는 개인적으로 epoch을 처음 접했을 때 생소했기 때문입니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;epoch&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;range&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;training_epochs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;avg_cost&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;total_batch&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mnist&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;train&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;num_examples&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;batch_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+        &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;range&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;total_batch&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;batch_x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;batch_y&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mnist&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;train&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;next_batch&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;batch_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;batch_x&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;batch_x&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;reshape&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;batch_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;input_steps&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;input_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+
+            &lt;span class=&quot;n&quot;&gt;c&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;_&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sess&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;run&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cost2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;optimizer2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;feed_dict&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;X&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;batch_x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;batch_y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;   
+            &lt;span class=&quot;n&quot;&gt;avg_cost&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;c&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;total_batch&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;위의 코드는 두번째 스타일이고, 각 epoch마다 cost값과 test data로 예측의 accuracy를 계산하여 출력하였습니다. 당연하게도 학습이 반복 될수록 cost는 감소하고 accuracy는 증가하였습니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;4-정리&quot;&gt;4. 정리&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;기본적으로 도식을 통해 input size, time step, hidden_size에 대한 개념을 이해하는 것이 도움이 됩니다.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;tensor의 shape을 이해하는 것이 중요하다고 생각합니다. input과 output의 형식(shape)을 머리속에 떠올릴 수 있다면 에러를 줄일 수 있고 해결하기도 수월합니다.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;batch size의 의미, unstack을 하는 이유, epoch의 의미를 알아두면 좋겠습니다.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;reference&quot;&gt;Reference&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&quot;https://deeplearning4j.org/kr/lstm#vanishing&quot;&gt;DEEPLEARNING4J 초보자를 위한 RNNs과 LSTM 가이드&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://colah.github.io/posts/2015-08-Understanding-LSTMs/&quot;&gt;Colah’s blog, Understanding LSTM Networks&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://www.whydsp.org/280&quot;&gt;이태우, 엘에스티엠 네트워크 이해하기&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://www.youtube.com/watch?v=cKtg_fpw88c&amp;amp;list=PLlMkM4tgfjnLSOjrEJN31gZATbcj_MpUm&amp;amp;index=30&quot;&gt;김성훈, 모두의 딥러닝 lec 9-2. Vanishing gadient&lt;/a&gt;&lt;/p&gt;
+
+&lt;!-- Global site tag (gtag.js) - Google Analytics --&gt;
+&lt;script async=&quot;&quot; src=&quot;https://www.googletagmanager.com/gtag/js?id=UA-103074382-1&quot;&gt;&lt;/script&gt;
+
+&lt;script&gt;
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-103074382-1');
+&lt;/script&gt;
+
+</description>
+        <pubDate>Thu, 20 Jul 2017 00:00:00 +0900</pubDate>
+        <link>http://localhost:4000/lstm/</link>
+        <guid isPermaLink="true">http://localhost:4000/lstm/</guid>
+        
+        <category>lstm</category>
+        
+        <category>tensorflow</category>
+        
+        <category>MNIST</category>
+        
+        <category>batch size</category>
+        
+        <category>unstack</category>
+        
+        <category>tf.unstack</category>
+        
+        <category>RNN</category>
+        
+        
+        <category>blog</category>
+        
+      </item>
+    
+      <item>
+        <title>BLSTM Tutorial</title>
+        <description>&lt;h2 id=&quot;summary&quot;&gt;Summary:&lt;/h2&gt;
+
+&lt;p&gt;이 포스팅은 Bidirectional LSTM에 대한 기본 개념을 소개하고, tensorflow와 MNIST 데이터를 이용하여 구현해 봅니다.&lt;/p&gt;
+
+&lt;h2 id=&quot;bidirectional-lstm&quot;&gt;Bidirectional LSTM&lt;/h2&gt;
+
+&lt;h3 id=&quot;1-개념-설명&quot;&gt;1. 개념 설명&lt;/h3&gt;
+
+&lt;p&gt;앞에서 RNN 과 LSTM 모델에 대해 소개했습니다.&lt;/p&gt;
+
+&lt;p&gt;기본적인 LSTM 모델은 이전 시간의 step들이 다음 step에 영향을 줄 것이라는 가정을 했습니다.&lt;/p&gt;
+
+&lt;p&gt;하지만 이후의 step 또한 앞의 step 에 영향을 줄 수 있다면 이 모델을 어떻게 적용시킬 수 있을까요?&lt;/p&gt;
+
+&lt;p&gt;이후의 step 의 영향도 반영한 모델이 Bidirectional LSTM 모델입니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/BLSTM.PNG&quot; alt=&quot;BLSTM structure&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;위의 그림과 같이 BLSTM 은 두 개의 LSTM 모델을 Concatenate 하여 사용합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/BLSTM2.PNG&quot; alt=&quot;BLSTM structure2&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Time step 이 1부터 t 까지 있다고 가정할 때 forward lstm model 에서는 input 을 Time step 이 1 일때부터 t 까지 순차적으로 주고 학습합니다.&lt;/p&gt;
+
+&lt;p&gt;반대로 backward lstm model 에서 input 을 T = t 일때부터 1까지 거꾸로 input 주고 학습을 하게 됩니다.&lt;/p&gt;
+
+&lt;p&gt;time step 마다 두 모델에서 나온 2개의hidden vector은 학습된 가중치를 통해 하나의 hidden vector로 만들어지게 됩니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;2-구현&quot;&gt;2. 구현&lt;/h3&gt;
+
+&lt;p&gt;전체 코드는 &lt;a href=&quot;https://github.com/POZAlabs/Tutorial_Tensorflow/blob/master/BLSTM.py&quot;&gt;Github page&lt;/a&gt; 를 참고해주세요.&lt;/p&gt;
+
+&lt;p&gt;MNIST image 를 input 으로 넣었을 때 이 image 가 0 에서 9 중에 어떤 숫자인지 맞추는 BLSTM 모델을 만들어 보고자 합니다.&lt;/p&gt;
+
+&lt;p&gt;MNIST 는 0 - 9 의 숫자 image data 이며 각 데이터는 28 x 28 의 matrix (data 는 28 x 28 길이의 array) 로 이루어져 있습니다.&lt;/p&gt;
+
+&lt;p&gt;앞에서 봤듯이 LSTM 은 sequence 형태를 요구합니다.&lt;/p&gt;
+
+&lt;p&gt;그래서 데이터 하나를 한 번에 넣는 것이 아니라 각 데이터의 matrix 를 row 만큼, 즉 28번의 time step 으로 나누어 넣어주게 됩니다.&lt;/p&gt;
+
+&lt;p&gt;그래서 input_sequence 를 28 길이로 설정합니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
+&lt;span class=&quot;n&quot;&gt;learning_rate&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;0.001&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;training_epochs&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# 전체 데이터를 몇번 반복하여 학습 시킬 것인가&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;batch_size&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;256&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# 한 번에 받을 데이터 개수&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# model &lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 입력되는 이미지 사이즈 28*28&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;input_size&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;28&lt;/span&gt;   &lt;span class=&quot;c&quot;&gt;# input size(=input dimension)는 셀에 입력되는 리스트 길이&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;input_steps&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;28&lt;/span&gt;  &lt;span class=&quot;c&quot;&gt;# input step(=sequence length)은 입력되는 리스트를 몇개의 time-step에 나누어 담을 것인가?  &lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;n_hidden&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;128&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;n_classes&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt;    &lt;span class=&quot;c&quot;&gt;# classification label 개수&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;X&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tf&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;placeholder&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tf&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;float32&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,[&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;input_steps&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;input_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;Y&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tf&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;placeholder&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tf&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;float32&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,[&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;n_classes&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;W&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tf&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Variable&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tf&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;random_normal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;n_hidden&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;n_classes&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]))&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;b&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tf&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Variable&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tf&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;random_normal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;n_classes&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]))&lt;/span&gt;
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;X 는 28 x 28 의 matrix 로 이루어진 데이터를 받고 Y 는 실제 class (0 - 9) 를 의미하는 length 10 의 vector 를 받습니다.&lt;/p&gt;
+
+&lt;p&gt;그리고 각 forward lstm 모델과 backward lstm 모델에서 들어오는 weight 값을 받을 변수를 설정합니다.&lt;/p&gt;
+
+&lt;p&gt;DropoutWrapper 는 모델에서 input 으로 주어진 data 에 대한 Overfitting 이 발생하지 않도록 만들어주는 모델입니다.&lt;/p&gt;
+
+&lt;p&gt;각 state 를 랜덤하게 비활성화시켜서 데이터를 더 random 하게 만들어줍니다. keep_prob 변수를 통해서 dropoutWrapper 의 확률값을 조정합니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;keep_prob&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tf&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;placeholder&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tf&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;float32&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;forward lstm 과 backward lstm 에서 사용할 cell을 생성합니다&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# lstm cell 생성&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;lstm_fw_cell&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tf&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;nn&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rnn_cell&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;LSTMCell&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;num_units&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;n_hidden&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;state_is_tuple&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;True&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;lstm_fw_cell&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tf&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;nn&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rnn_cell&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;DropoutWrapper&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;lstm_fw_cell&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;output_keep_prob&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;keep_prob&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;lstm_bw_cell&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tf&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;nn&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rnn_cell&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;LSTMCell&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;num_units&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;n_hidden&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;state_is_tuple&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;True&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;lstm_bw_cell&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tf&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;nn&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rnn_cell&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;DropoutWrapper&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;lstm_bw_cell&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;output_keep_prob&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;keep_prob&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;학습할 모델을 생성합니다&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;outputs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;_&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tf&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;nn&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;bidirectional_dynamic_rnn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;lstm_fw_cell&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;lstm_bw_cell&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;X&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;dtype&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tf&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;float32&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;기존의 lstm 과 달리 output 이 2개의 LSTMStateTuple 로 이루어져 있습니다.&lt;/p&gt;
+
+&lt;p&gt;각 output 에 가중치를 더해서 하나의 output 으로 만들어주는 과정이 필요합니다.&lt;/p&gt;
+
+&lt;p&gt;여기서 가장 헷갈리는 부분이 transpose 입니다. 왜 output 에 대해서 transpose를 하는 것인지 의문이 들 수 있습니다.&lt;/p&gt;
+
+&lt;p&gt;tf.nn.bidirectional_dynamic_rnn 문서를 보시면 output 의 default 는 [batch_size,max_time,depth] 라고 나와있습니다.&lt;/p&gt;
+
+&lt;p&gt;각각 mini batch 의 크기 그리고 time step, hidden state 의 depth 를 의미합니다.&lt;/p&gt;
+
+&lt;p&gt;우리는 각 데이터마다 마지막 time step 의 결과값을 output 으로 선택해야 합니다.&lt;/p&gt;
+
+&lt;p&gt;그래야지 전체 step 이 반영된 output 을 얻을 수 있습니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;outputs_fw&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tf&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;transpose&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;outputs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;outputs_bw&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tf&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;transpose&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;outputs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;pred&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tf&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;matmul&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;outputs_fw&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;w_fw&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tf&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;matmul&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;outputs_bw&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;w_bw&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;biases&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;matmul operation 연산 속도를 위해서 다음과 같이 하나의 output 으로 먼저 합치고 전체에 대한 가중치를 주는 것이 더 좋은 방법입니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;outputs_concat&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tf&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;concat&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;outputs_fw&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;outputs_bw&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]],&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;axis&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;pred&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tf&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;matmul&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;outputs_concat&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;W&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;이하 코드는 이전의 tutorial 과 동일합니다.&lt;/p&gt;
+
+&lt;!-- Global site tag (gtag.js) - Google Analytics --&gt;
+&lt;script async=&quot;&quot; src=&quot;https://www.googletagmanager.com/gtag/js?id=UA-103074382-1&quot;&gt;&lt;/script&gt;
+
+&lt;script&gt;
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-103074382-1');
+&lt;/script&gt;
+
+</description>
+        <pubDate>Wed, 12 Jul 2017 00:00:00 +0900</pubDate>
+        <link>http://localhost:4000/blstm/</link>
+        <guid isPermaLink="true">http://localhost:4000/blstm/</guid>
+        
+        <category>blstm</category>
+        
+        <category>lstm</category>
+        
+        <category>tensorflow</category>
+        
+        
+        <category>blog</category>
+        
+      </item>
+    
+  </channel>
+</rss>
