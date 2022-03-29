@@ -1,7 +1,7 @@
 ---
-title: “Optimizer”
+title: Optimizer
 layout: post
-date: 2021-03-16
+date: 2022-03-30
 headerImage: False
 tag:
 - Perceptron
