@@ -209,7 +209,7 @@ momentum(V), learning rate(G) term을 각각 계산해서, learning rate를 step
 
 논문제목 : <a href="https://arxiv.org/abs/2105.10190">**AngularGrad: A New Optimization Technique for Angular Convergence of Convolutional Neural Networks**</a>  
 요약 : SGD부터 Adam까지 parameter-cost function그래프에서 수직방향에 대한 영향을 많이 받기 때문에, 계곡사이에 흐르는 강의 모양을 한 아래와 같은 Rosenbrock function등 다양한 최적화 알고리즘의 성능을 시험하는 함수에서 수직방향의 영향을 받아 극소점까지의 수렴이 매우 느리며 극소점 근처에서도 oscilating하는 현상이 발생하여 수직방향의 성분을 줄여 안정적으로 극소점을 찾아가는 기술에 대한 논문입니다.  
-![Rbro.png](/assets/images/optimizer/Rosenbrok_f.png)
+![Rbro.png](/assets/images/optimizer/Rosenbrock_f.png)
 <center>Rosenbrok 함수</center><br>
 
 ![Rbro_adam.png](/assets/images/optimizer/rf_adam.png)
