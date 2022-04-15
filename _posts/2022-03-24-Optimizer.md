@@ -15,7 +15,7 @@ description: Optimizer summary
 ---
 
 # Optimizer
-## - cost에 따라 어떻게 hyper-parameter를 업데이트할것인가?
+## hyper-parameter를 어떻게 업데이트 할껀데?
 
 이번 포스팅에서 다룰 기술은 바로 Optimizer입니다.
 
@@ -43,7 +43,7 @@ description: Optimizer summary
 
 ---
 
-## 2.Gradient Descent
+## 2. Gradient Descent
 
 위키피디아에 gradient descent를 검색하면
 “In mathematics gradient descent is a first-order iterative optimization algorithm for fining a local minimum of differentiable function.”이라고 나옵니다. 직역하면 “미분가능한 함수의 극소값을 찾는 1차 반복 최적화 알고리즘”입니다. 앞서 설명햇듯, 딥러닝 모델은 학습데이터를 반복적으로 모델에 학습시켜 데이터에 맞게 딥러닝 모델의 parameter를 업데이트하여 데이터에 딥러닝 모델을 최적화하는 방식으로 생성된다고 하였습니다.  
@@ -60,11 +60,9 @@ $$
 w_{t+1}/quad = /quad w_{t} - \eta{\del_{w}}J(w_{t})
 $$
 
-
 $$
 J(w_{t}) = \frac{1}{m}\sum{i=1}^{m}L(\hat{y}^{i},y^{i})
 $$
-
 
 위의 두번째 수식이 cost function입니다. 계속해서 언급했듯, 딥러닝 모델이란 학습 데이터에 모델을 반복적인 학습하여 최적화 시키는 작업이라고 하였고, 최적화라고 할 수 있는 인자가 cost라고 할 수 있으며 이 값을 최소로 만든다면, 딥러닝 모델이 데이터에 최적화 되었다고 얘기할 수 있을 것입니다.
 
@@ -78,7 +76,7 @@ Q. 최초학습 때, w, b는 어떻게 설정하는데?
 
 ---
 
-## 3.문제점 
+## 3. 문제점 
 그러나 딥러닝을 조금이라도 경험해본 분들이라면 눈치 챘을 수도 있겠지만, 아무도 GD를 사용하지 않습니다. Why? GD보다 좋은 optimizer가 너무나도 많이 개발되었기 때문입니다.
 
 ### 그러면 GD는 어떤 문제가 있을까요?
@@ -86,7 +84,7 @@ Q. 최초학습 때, w, b는 어떻게 설정하는데?
 GD는 단 한번의 파라미터 업데이트를 위해, 모든 학습데이터에 대해 cost를 계산한 뒤에 업데이트합니다.
 
 ### 그래서 이게 왜 문제가 되는데???
-GD는 컴퓨터가 개발되기도 전에 나온 이론이고 해당 기술을 <a href="https://projectresearch.co.kr/2017/06/14/%EB%A8%B8%EC%8B%A0%EB%9F%AC%EB%8B%9Dml%EC%9D%98-%EA%B0%84%EB%9E%B5%ED%95%9C-%EC%97%AD%EC%82%AC/">**머신러닝 목적**</a>으로 사용했을 때에도 대략 1940~2000년대에 적용했었습니다. 다시말해 이전에 GD가 사용될 떄는 데이터의 양이 매우 적었고 그렇기에 GD를 적용하는데 아무 문제가 되지 않았습니다. 왜냐하면 얼마되지도 않는 데이터를 쭉 훓어보고 한번 업데이트하면 그만이였으니까요. 그러나 딥러닝에 GD를 적용하는 것은 또 다른 문제입니다. 딥러닝은 기본적으로 무수히 많은 종류와 많은 양의 데이터를 이용하여 모델을 학습하기 때문입니다. 그렇기에 전체데이터를 다 훓어보고 한번 업데이트를 하게된다면 적당한 성능의 모델을 개발하기위해 천문학적인 리소스가 필요하게 될것입니다.
+GD는 컴퓨터가 개발되기도 전에 나온 이론이고 해당 기술을 [**머신러닝 목적**](https://projectresearch.co.kr/2017/06/14/%EB%A8%B8%EC%8B%A0%EB%9F%AC%EB%8B%9Dml%EC%9D%98-%EA%B0%84%EB%9E%B5%ED%95%9C-%EC%97%AD%EC%82%AC/)으로 사용했을 때에도 대략 1940~2000년대에 적용했었습니다. 다시말해 이전에 GD가 사용될 떄는 데이터의 양이 매우 적었고 그렇기에 GD를 적용하는데 아무 문제가 되지 않았습니다. 왜냐하면 얼마되지도 않는 데이터를 쭉 훓어보고 한번 업데이트하면 그만이였으니까요. 그러나 딥러닝에 GD를 적용하는 것은 또 다른 문제입니다. 딥러닝은 기본적으로 무수히 많은 종류와 많은 양의 데이터를 이용하여 모델을 학습하기 때문입니다. 그렇기에 전체데이터를 다 훓어보고 한번 업데이트를 하게된다면 적당한 성능의 모델을 개발하기위해 천문학적인 리소스가 필요하게 될것입니다.
 
 ### 두번째, local minimum에 빠질 수 있다.
 ![local_min.png](/assets/images/optimizer/local_min.png)
@@ -207,7 +205,7 @@ momentum(V), learning rate(G) term을 각각 계산해서, learning rate를 step
 
 ## 5. Brand-new and Essue
 
-논문제목 : <a href="https://arxiv.org/abs/2105.10190">**AngularGrad: A New Optimization Technique for Angular Convergence of Convolutional Neural Networks**</a>  
+논문제목 : [**AngularGrad: A New Optimization Technique for Angular Convergence of Convolutional Neural Networks**](https://arxiv.org/abs/2105.10190)  
 요약 : SGD부터 Adam까지 parameter-cost function그래프에서 수직방향에 대한 영향을 많이 받기 때문에, 계곡사이에 흐르는 강의 모양을 한 아래와 같은 Rosenbrock function등 다양한 최적화 알고리즘의 성능을 시험하는 함수에서 수직방향의 영향을 받아 극소점까지의 수렴이 매우 느리며 극소점 근처에서도 oscilating하는 현상이 발생하여 수직방향의 성분을 줄여 안정적으로 극소점을 찾아가는 기술에 대한 논문입니다.  
 ![Rbro.png](/assets/images/optimizer/Rosenbrock_f.png)
 <center>Rosenbrok 함수</center><br>
@@ -217,15 +215,13 @@ momentum(V), learning rate(G) term을 각각 계산해서, learning rate를 step
 
 평가 : 필자는 해당 기술에 대해 다소 회의적입니다. 왜냐면 해당 논문이 2021 IEEE에 등재될정도로 우수한 논문임에는 이견이 없지만 그러한 case가 흔치 않으며 그러한 function의 극소점을 찾는 것을 사전에 알고 접근하지 않는 이상 Adam을 사용하는것이 오히려 generall하게 우수한 성능을 보장할 것이라고 생각합니다.
 
-이슈 : <a href="https://medium.com/geekculture/a-2021-guide-to-improving-cnns-optimizers-adam-vs-sgd-495848ac6008">**SGD가 Adam보다 일반화면에서 오히려 우수하다?!**</a>  
+이슈 : [**SGD가 Adam보다 일반화면에서 오히려 우수하다?!**](https://medium.com/geekculture/a-2021-guide-to-improving-cnns-optimizers-adam-vs-sgd-495848ac6008)  
 요약 : 다양한 실험을 통해 Adam의 성능이 증명되었으나 굳이 저렇게 optimizer를 복잡하게 가져갈 필요할까?라는 의문점에서 시작된 논쟁으로, Adam이 오히려 over-fitting이 가속화된다고 주장합니다. 일반적으로 Adam은 초기값 설정을 하지않아도 성능이 좋다고 하였는데 실험결과를 보니 초기값에 따라 Adam의 성능차이가 존재하였습니다. 다시말해 초기값을 어떻게 잡냐에 따라 Adam이 오히려 SGD보다 일반화에 실패하는 경우가 있다. 그러나 다른 논문에서는 딥러닝이 더욱더 딥해지면서 더 많은 parameter를 사용하기 때문에 SGD보다 Adam이 좋다고 주장합니다.
 평가 : 필자는 딥한 모델을 학습시에는 Adam이 항상 SGD보다 좋다고 생각하고, 얉은 모델에서는 굳이 Adam을 고집할 필요가 있을까? 라고 생각이 되었습니다. 이렇듯 딥러닝에 대한 개발이 오래전부터 활발히 진행됬음에도 불구하고 여전히 basic한 기술과 최신의 기술에 대해 언쟁이 오가는 만큼 기초를 잘 잡고 있어야 변하는 흐름에 빠르게 대응이 가능할 것고 이런 개발자들이 시장에서 좋은 평가를 받지 않을까 싶습니다.
 
-## 6.정리
+## 6. 정리
 
 지금까지 optimizer의 개념과 gradient descent를 통해 어떤 식으로 사용되는지 확인하였고 동시에 optmizer의 기술흐름에 대해 알아보았습니다. 요약하면 optimizer는 cost function에서 weight, bias를 이용하여 이러한 parameter를 어떤식으로 수정해 나갈것인지 결정하는 알고리즘이며 이중 많이 언급되는 gradient descent는 optimizer의 개념을 이해하기 쉬운 기술로, 최초 parameter에서 cost function을 통해 값을 계산하고 이때의 미분값과 learning rate로 중학교시간에 배우는 극소점을 찾아가는 과정과 동일하며 GD의 느린 학습속도를 보완하기 위해 나온 SGD. 그리고 여기서 momentum과 learning rate개념을 적용하여 개발된 MO와 Adagrad 그리고 극소점 근방이 sharp하거나 oscilating이 심하면 학습이 오래걸리는 MO의 문제점을 보완하기 위해 개발된 NAG. 그리고 학습이 길어지면 학습이 거의 되지않는 Adagrad의 문제점을 보완하기 위해 개발된 RMSprop. momentum과 learning rate term의 개념을 모두 종합하여 개발된 Adam이렇게 정리 할 수 있겠습니다.
 
 
-## 7.reference
-
-
+## 7. reference
