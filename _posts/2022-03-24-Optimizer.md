@@ -216,12 +216,14 @@ momentum(V), learning rate(G) term을 각각 계산해서, learning rate를 step
 평가 : 필자는 해당 기술에 대해 다소 회의적입니다. 왜냐면 해당 논문이 2021 IEEE에 등재될정도로 우수한 논문임에는 이견이 없지만 그러한 case가 흔치 않으며 그러한 function의 극소점을 찾는 것을 사전에 알고 접근하지 않는 이상 Adam을 사용하는것이 오히려 generall하게 우수한 성능을 보장할 것이라고 생각합니다.
 
 이슈 : [**SGD가 Adam보다 일반화면에서 오히려 우수하다?!**](https://medium.com/geekculture/a-2021-guide-to-improving-cnns-optimizers-adam-vs-sgd-495848ac6008)  
-요약 : 다양한 실험을 통해 Adam의 성능이 증명되었으나 굳이 저렇게 optimizer를 복잡하게 가져갈 필요할까?라는 의문점에서 시작된 논쟁으로, Adam이 오히려 over-fitting이 가속화된다고 주장합니다. 일반적으로 Adam은 초기값 설정을 하지않아도 성능이 좋다고 하였는데 실험결과를 보니 초기값에 따라 Adam의 성능차이가 존재하였습니다. 다시말해 초기값을 어떻게 잡냐에 따라 Adam이 오히려 SGD보다 일반화에 실패하는 경우가 있다. 그러나 다른 논문에서는 딥러닝이 더욱더 딥해지면서 더 많은 parameter를 사용하기 때문에 SGD보다 Adam이 좋다고 주장합니다.
+요약 : 다양한 실험을 통해 Adam의 성능이 증명되었으나 굳이 저렇게 optimizer를 복잡하게 가져갈 필요할까?라는 의문점에서 시작된 논쟁으로, Adam이 오히려 over-fitting이 가속화된다고 주장합니다. 일반적으로 Adam은 초기값 설정을 하지않아도 성능이 좋다고 하였는데 실험결과를 보니 초기값에 따라 Adam의 성능차이가 존재하였습니다. 다시말해 초기값을 어떻게 잡냐에 따라 Adam이 오히려 SGD보다 일반화에 실패하는 경우가 있다. 그러나 다른 논문에서는 딥러닝이 더욱더 딥해지면서 더 많은 parameter를 사용하기 때문에 SGD보다 Adam이 좋다고 주장합니다.  
 평가 : 필자는 딥한 모델을 학습시에는 Adam이 항상 SGD보다 좋다고 생각하고, 얉은 모델에서는 굳이 Adam을 고집할 필요가 있을까? 라고 생각이 되었습니다. 이렇듯 딥러닝에 대한 개발이 오래전부터 활발히 진행됬음에도 불구하고 여전히 basic한 기술과 최신의 기술에 대해 언쟁이 오가는 만큼 기초를 잘 잡고 있어야 변하는 흐름에 빠르게 대응이 가능할 것고 이런 개발자들이 시장에서 좋은 평가를 받지 않을까 싶습니다.
 
 ## 6. 정리
 
-지금까지 optimizer의 개념과 gradient descent를 통해 어떤 식으로 사용되는지 확인하였고 동시에 optmizer의 기술흐름에 대해 알아보았습니다. 요약하면 optimizer는 cost function에서 weight, bias를 이용하여 이러한 parameter를 어떤식으로 수정해 나갈것인지 결정하는 알고리즘이며 이중 많이 언급되는 gradient descent는 optimizer의 개념을 이해하기 쉬운 기술로, 최초 parameter에서 cost function을 통해 값을 계산하고 이때의 미분값과 learning rate로 중학교시간에 배우는 극소점을 찾아가는 과정과 동일하며 GD의 느린 학습속도를 보완하기 위해 나온 SGD. 그리고 여기서 momentum과 learning rate개념을 적용하여 개발된 MO와 Adagrad 그리고 극소점 근방이 sharp하거나 oscilating이 심하면 학습이 오래걸리는 MO의 문제점을 보완하기 위해 개발된 NAG. 그리고 학습이 길어지면 학습이 거의 되지않는 Adagrad의 문제점을 보완하기 위해 개발된 RMSprop. momentum과 learning rate term의 개념을 모두 종합하여 개발된 Adam이렇게 정리 할 수 있겠습니다.
+지금까지 optimizer의 개념과 gradient descent를 통해 어떤 식으로 사용되는지 확인하였고 동시에 optmizer의 기술흐름에 대해 알아보았습니다.  
+요약하면 optimizer는 cost function에서 weight, bias를 이용하여 이러한 parameter를 어떤식으로 수정해 나갈것인지 결정하는 알고리즘이며 이중 많이 언급되는 gradient descent는 optimizer의 개념을 이해하기 쉬운 기술로, 최초 parameter에서 cost function을 통해 값을 계산하고 이때의 미분값과 learning rate로 중학교 미분시간에 배우는 극소점을 찾아가는 과정과 동일합니다.  
+추가로, GD의 느린 학습속도를 보완하기 위해 나온 SGD. 그리고 여기서 momentum과 learning rate개념을 적용하여 개발된 MO와 Adagrad 그리고 극소점 근방이 sharp하거나 oscilating이 심하면 학습이 오래걸리는 MO의 문제점을 보완하기 위해 개발된 NAG. 그리고 학습이 길어지면 학습이 거의 되지않는 Adagrad의 문제점을 보완하기 위해 개발된 RMSprop. momentum과 learning rate term의 개념을 모두 종합하여 개발된 Adam이렇게 정리 할 수 있겠습니다.
 
 
 ## 7. reference
