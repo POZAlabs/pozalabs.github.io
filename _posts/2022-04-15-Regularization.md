@@ -101,7 +101,15 @@ L2의 경우, 값이 작아지긴하지만 L1처럼 상수값을 계속 빼주�
 이 2가지만 확실하게 알아가시면 이번 포스팅을 훌륭하게 이해하신 것입니다.  
 
 ## 7. reference
-youtube link : https://www.youtube.com/watch?v=BUTP-YsD3nM
+youtube link
+1. https://youtu.be/6g0t3Phly2M
+2. https://youtu.be/NyG-7nRpsW8
+
+blog
+1. https://m.blog.naver.com/laonple/220527647084
+2. https://wooono.tistory.com/221
+3. 
+
 
 
 
