@@ -76,11 +76,12 @@ width: normal
 # paginate_path: "blog/:num/"
 
 # if you don't need projects, comment the *projects* configs below
-#projects: true
+#Dataset: true
 
 # if you don't need "about" or "blog", comment them out below
 about: true
 blog: true
+Dataset: true
 
 # do you want to show the "read time" of the posts?
 read-time: true
