@@ -57,7 +57,7 @@ Gradient Descent, 경사하강법이라고 하는 이 방법은 w를 미지수�
 ![gd.png](/assets/images/optimizer/gd.png)
 
 $$
-w_{t+1}/quad = /quad w_{t} - \eta{\del_{w}}J(w_{t})
+w_{t+1}\quad = \quad w_{t} - \eta {\del_{w}} J(w_{t})
 $$
 
 $$
