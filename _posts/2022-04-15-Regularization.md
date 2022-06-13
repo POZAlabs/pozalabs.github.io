@@ -47,19 +47,20 @@ Regularization은 통계에서도 많이 사용되는 단어로 '일반화', '�
 ### L1 Norm & Loss
 아래의 수식을 보면서 설명하겠습니다. L1 norm은 각 원소의 절대값의 합으로 계산되며, 'manhattan distance', 'texicab geometry'이라고도 불리읍니다. 아래의 수식은 어떤 의미를 얘기할까요? 예를 들어 설명하겠습니다. 우리가 빌딩 숲을 지나서 목적지로 간다고 가정을 해봅시다. 1이 도로의 한 블럭을 의미한다고 가정하고, 현재 위치가 (-5,4) 목적지가 (3,10)이라고 가정을 하면 |-5-(+3)| + |4-(+10)| = 14 즉 어떤 방향으로 가든 총 14블럭을 이동해야 목적기에 도착이 가능합니다. 이제 manhattan distance라는 의미가 이해가 가시나요? 맨하탄에서 각 블럭을 1로 두고 목적지까지의 거리를 계산하면 L1 Norm처럼 계산하면되기 때문입니다.  
 
-![l1_norm.png](/assets/images/Regularization/l1_norm.png)  
-그러면 여기서 나아가서 L1 loss는 무엇일까요? 수식의 $$y_true$$는 정답값 y_pred는 예측값입니다. 수식을 설명하면 정답값과 예측값의 거리를 L1 norm방식으로 계산하겠다는 의미입니다.  
+$$||x_{1}|| \quad=\quad \sum_{i=1}^{n} |x_{i}|$$
 
-![l1_loss.png](/assets/images/Regularization/l1_loss.png)
+그러면 여기서 나아가서 L1 loss는 무엇일까요? 수식의 $$y_{true}$$는 정답값 $$y_{pred}$$는 예측값입니다. 수식을 설명하면 정답값과 예측값의 거리를 L1 norm방식으로 계산하겠다는 의미입니다.
+
+$$L1 \ Loss \ Function \quad=\quad \sum_{i=1}^n |y_{true} - y_{pred}|$$
 
 ### L2 Norm & Loss
-L2 norm은 각 원소의 제곱의 합을 루트로 씌운것으로 기하학에서는 euclidean distance라고 불리웁니다. 아래의 수식을 L1에서 사용한 예를 가져와서 적용하면 root((-5-(+3))^2 + (4-(+10))^2) = 10. 즉 목적지까지 직선으로 갔다는 가정하에 10블록의 거리를 가면 목적지에 도착한다는 의미입니다.  
+L2 norm은 각 원소의 제곱의 합을 루트로 씌운것으로 기하학에서는 euclidean distance라고 불리웁니다. 아래의 수식을 L1에서 사용한 예를 가져와서 적용하면 $$\sqrt{(-5-(+3))^2 + (4-(+10))^2} = 10$$. 즉 목적지까지 직선으로 갔다는 가정하에 10블록의 거리를 가면 목적지에 도착한다는 의미입니다.
 
-![l2_norm.png](/assets/images/Regularization/l2_norm.png)  
+$$||x_2|| \quad=\quad \sqrt{\sum_{i=1}^{n} x_{i}^{2}} \quad=\quad \sqrt{x^{T}x}$$
 
-L1과 동일하게 L2 loss는 무엇일까요? 아래의 수식을 설명하면 정답값과 예측값의 거리를 L2 norm방식으로 계산하겠다는 의미입니다.  
+L1과 동일하게 L2 loss는 무엇일까요? 아래의 수식을 설명하면 정답값과 예측값의 거리를 L2 norm방식으로 계산하겠다는 의미입니다.
 
-![l1_loss.png](/assets/images/Regularization/l1_loss.png)
+$$L1 \ Loss \ Function \quad=\quad \sum_{i=1}^{n} |y_{true} = y_{pred}|$$
 
 아래의 그림을 보면 L1, L2 norm의 의미를 쉽게 이해할 수 가 있습니다. 초록색이 L2 norm, 나머지 선들이 모두 L1 norm을 의미합니다. 아래 그림에서 보이듯 L2 norm은 오직 하나의 값만을 지니며, L1 norm은 여러 값이 존재할 수 있는 것입니다.  
 
@@ -78,12 +79,12 @@ L1, L2 loss의 장단점은 무엇이 있을까요? 먼저 L2의 경우, 제곱�
 ### L2-regularization
 아래의 수식을 보면 기존의 loss function에 L2 norm을 더한 것이 L2-regularization임을 알 수 있습니다. L2 norm term이 어떤 영향을 줄까요? 이전에 loss function은 미분을 통해서 w값을 업데이트한다고 설명하였습니다. 그러면 위 수식에서 weight에 대해 편미분을 진행하면 아래와 같은 수식이 완성됩니다. Back-propagation과 single L2 norm으로 말이죠 이 수식을 weight를 업데이트하는 2번 수식에 넣어서 정리하면 기존방법에 비해 L2 regularization은 weight가 감소하는 방향으로 업데이트 함을 알 수 있습니다.  
 
-![l2_regularization.png](/assets/images/Regularization/l2_regularization.png)  
+$$Loss \quad=\quad Error(y, \hat{y}) + \lambda \sum_{i=1}^{N} w_{i}^{2} $$
 
 ### L1-regularization
 아래의 L1수식을 통해 loss function에 L1 norm이 더해진 것이 L1 regularization인 것을 알 수 있습니다. L2와 동일하게 loss function을 weight에 대해 편미분을 하고 기존 방법과 비교하면, L1 regulariation은 이전 step weight의 상수값을 계속해서 빼주는 것을 알 수 있습니다. 그래서 정리하면 L1-regularization은 특정 상수값을 weight update과정에서 빼주는 것을 알 수 있습니다.  
 
-![l1_regularization.png](/assets/images/Regularization/l1_regularization.png)  
+$$Loss \quad=\quad Error(y,\hat{y}) + \lambda\sum_{i=1}^{N}|w_{i}|$$
 
 ### L1, L2 regularization의 공통점과 차이점
 ### 공통점과 장점
@@ -124,9 +125,14 @@ blog
 2. https://wooono.tistory.com/221
 
 
+<script type="text/javascript" async src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"> </script>
 
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-103074382-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
 
-
-
-
-
+  gtag('config', 'UA-103074382-1');
+</script>
