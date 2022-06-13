@@ -57,11 +57,11 @@ Gradient Descent, 경사하강법이라고 하는 이 방법은 w를 미지수�
 ![gd.png](/assets/images/optimizer/gd.png)
 
 $$
-w_{t+1}\quad = \quad w_{t} - \eta {\del_{w}} J(w_{t})
+w_{t+1} \quad=\quad w_{t} - \eta \nabla w J(w_{t})
 $$
 
 $$
-J(w_{t}) = \frac{1}{m}\sum{i=1}^{m}L(\hat{y}^{i},y^{i})
+J(w_{t}) \quad=\quad \frac{1}{m}\sum_{i=1}^{m} L(\hat{y}^{i},y^{i})
 $$
 
 위의 두번째 수식이 cost function입니다. 계속해서 언급했듯, 딥러닝 모델이란 학습 데이터에 모델을 반복적인 학습하여 최적화 시키는 작업이라고 하였고, 최적화라고 할 수 있는 인자가 cost라고 할 수 있으며 이 값을 최소로 만든다면, 딥러닝 모델이 데이터에 최적화 되었다고 얘기할 수 있을 것입니다.
@@ -122,15 +122,15 @@ BGD의 경우에는 모든 batch의 데이터를 계산후에 모두 더한후, 
 모멘텀은 위의 SGD에서 발생하는 문제점을 해결하기 위해 개발된 기술로 개념은 간단합니다. SGD수식과의 비교를 통해 이해를 해봅시다.
 
 $$
-w_{t+1}\quad = \quad w_{t} - \eta{\del_{w}}J(w_{t})
+w_{t+1} \quad=\quad w_{t} - \eta \nabla w J(w_{t})
 $$
 
 $$
-w_{t+1}\quad = \quad w_{t} + V_{t}
+w_{t+1} \quad=\quad w_{t} + V_{t}
 $$
 
 $$
-V_{t} \quad = \quad m\times V_{t-1} - \eta\del_{w}J(w_{t})
+V_{t} \quad=\quad m\times V_{t-1} - \eta \nabla w J(w_{t})
 $$
 
 미분 term을 비교하면 MO의 경우, 이전에 사용했던 미분값을 추가로 더해줌으로써 이전 step에서 미분값이 컸다면 큰값을 업데이트해주며, 미분값이 작다면 작은값을 업데이트 해주게된다.  
@@ -145,7 +145,7 @@ NAG는 MO을 개량하기 위해 개발된 기술입니다. 만약 global minimu
 빠른 이해를 위해 비유를 하나 하면, 어떠한 계곡의 제일 낮은 지점에 공을 안착시키고 싶다고 합시다. GD의 경우에는 일정 step만큼만 이동을 하여 계곡의 최저 지점에서 멈추게 되지만 MO의 경우에는 계곡 위에서 내려오는 관성으로 인해 최저지점을 넘어가게 되고 이런 현상은 계곡이 가파를수록 지속될 것입니다.
 
 $$
-V_{t} \quad = \quad m\times V_{t-1} - \eta\del_{w}J(w_{t}-m\times V_{t-1})
+V_{t} \quad=\quad m V_{t-1} - \eta \nabla w J(w_{t} - m V_{t-1})
 $$
 
 이를 해결하기위해 NAG가 개발되었습니다. MO와 NAG의 수식을 비교해봅시다. MO의 경우, momentum term에 현재의 미분값을 넣어서 미래의 미분값을 계산하게됩니다. 그러나 NAG의 경우에는 momentum으로 이동한 지점의 미분값을 넣어서 미래의 미분값을 구하여 업데이트하게 됩니다. 다시말해 MO는 현재에서 미래의 값을 구하여 업데이트하지만 NAG의 경우에는 현재에서 관성만큼 이동 후, 업데이트하여 이동한 지점의 미분으로 업데이트되어 이동한 위치의 미분값을 구하여 업데이트를 하게됩니다.
@@ -158,12 +158,12 @@ $$
 지금부터는 learning rate를 조절해가면서 학습하는 방법에 대해 설명하겠습니다. AGD는 learning rate에 지나치게 의존적이게 된다는 SGD의 단점을 보완하기 위해 개발되었으며, 수식을 보면서 설명 하겠습니다.
 
 $$
-w_{t+1} \quad = \quad w_{t}-\frac{\root{G_{t}} + \epsilon}{\eta}\dot\del_{w}J(w_{t})
+w_{t+1} \quad = \quad w_{t}-\frac{\sqrt{G_{t}} + \epsilon}{\eta} \nabla w J(w_{t})
 $$
 
 
 $$
-G_{t} \quad = \quad G_{t-1} + (\del_{w}J(w_{t}))^{2} \quad = \quad \sum{i=1}^{k}\del_{w_{t}}J(w_{i})
+G_{t} \quad = \quad G_{t-1} + (\nabla w J(w_{t}))^{2} \quad = \quad \sum_{i=1}^{k} \nabla w_{t} J(w_{i})
 $$
 
 learning rate update term($$G_{t}$$)을 보게되면 과거의 미분값을 계속해서 더해줌을 알 수 있습니다. 다시말해 과거의 미분값이 크면 클 수 록 $$G$$가 커지면서 learning rate를 줄이는 식으로 업데이트함을 알 수 있습니다.
@@ -178,7 +178,7 @@ learning rate update term($$G_{t}$$)을 보게되면 과거의 미분값을 계�
 RMSprop는 위의 Adagrad의 단점을 보완하기 위하여 개발되었습니다. 개념은 간단합니다. 아래의 수식을 보시겠습니다.
 
 $$
-G_{t} \quad = \quad \gamma G_{t-1} + (1-\gamma)(\del_{w}J(w_{t}))^{2}
+G_{t} \quad = \quad \gamma G_{t-1} + (1-\gamma)(\nabla w J(w_{t}))^{2}
 $$
 
 learning rate term에서 기존의 미분텀과 업데이트될 미분텀의 영향을 분산하며 과거의 정보는 다소 적게 반영하여 최신의 정보는 강하게 반영하여 현재의 상황을 보면서 학습하는 방식입니다. 그리하여 학습이 오래되어도 Adagrad에 비해 학습이 원활하게 되도록 하는 기술입니다.
@@ -189,15 +189,15 @@ learning rate term에서 기존의 미분텀과 업데이트될 미분텀의 영
 생각없이 그냥 사용하여도 좋은 이유는 이미 몇년전부터 많은 실험을 통해 그 성능과 효과가 입증이 되었기 때문입니다. 그러나 알고 쓰는 것과 모르고 쓰는 것은 하늘과 땅차이! 그러므로 Adam에 대해서 설명하겠습니다. 많은 개발자들이 사용해서 어려운 개념이라고 생각하기 쉽지만 이 기술도 매우 간단합니다. 바로 이전에 설명드렸던 momentum과 RMSprop의 개념을 짬뽕한 기술입니다. 수식을 보시겠습니다.
 
 $$
-V_{t} \quad = \quad \alpha\times V_{t-1} - (1-\alpha)\del_{w}J(w_{t})
+V_{t} \quad = \quad \alpha\times V_{t-1} - (1-\alpha)\nabla w J(w_{t})
 $$
 
 $$
-G_{t} \quad = \quad \beta G_{t-1} + (1-\beta)(\del_{w}J(w_{t}))^{2}
+G_{t} \quad = \quad \beta G_{t-1} + (1-\beta)(\nabla w J(w_{t}))^{2}
 $$
 
 $$
-w_{t+1} \quad = \quad w_{t} - V_{t}\frac{\root{G_{t}+\epsilon}}{\eta}
+w_{t+1} \quad = \quad w_{t} - V_{t}\frac{\sqrt{G_{t} + \epsilon}}{\eta}
 $$
 
 momentum(V), learning rate(G) term을 각각 계산해서, learning rate를 step마다 계산하며 동시에 momentum값을 구하여 parameter를 update합니다.
@@ -227,3 +227,15 @@ momentum(V), learning rate(G) term을 각각 계산해서, learning rate를 step
 
 
 ## 7. reference
+
+<script type="text/javascript" async src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"> </script>
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-103074382-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-103074382-1');
+</script>
