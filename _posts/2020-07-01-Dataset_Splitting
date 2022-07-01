@@ -37,7 +37,7 @@ description: Dataset Splitting summary
 - 그럼 dataset을 어떻게 분할시키는게 좋을까요? 가장 기본적인 분할법은 전체 dataset 을 train set과 test set으로 나누는 것입니다. 전체 dataset 의 80%는 train set으로, 나머지 20%는 test set으로 분류하게 됩니다. 이는 train set을 이용하여 모델을 학습시키고, test set을 이용하여 모델의 성능을 평가하기 위함입니다. 
 - 하지만 단순히 train 과 test set으로만 나누게 된다면 모델의 성능 검정을 한번 밖에 할 수 없고, test set에 대한 결과를 토대로 모델을 수정하게 된다면 overfitting이 발생할 가능성이 높아지게 됩니다. 따라서 우리는 train set을 한번 더 train set과 validation set으로 나누게 됩니다. 아래의 figure에서 보여지듯이, 대다수의 경우에는 전체 데이터셋을 train, validation, test set을 각 6:2:2 비율로 나누어 사용하게 됩니다. 
 
-![data_split.jpg](/assets/img/train_val_test/data_split.jpg)
+![data_split.jpg](/assets/images/Dataset_Splitting/data_split.jpg)
 
 위와 같이 나누어진 각 데이터셋이 어떻게 사용 되는지에 대해 알아보겠습니다. 
 
@@ -75,7 +75,7 @@ description: Dataset Splitting summary
 
 - 이번에는 데이터가 적은 경우에는 어떻게 해야하는지 알아보겠습니다. 우리에게 주어진 데이터셋의 크기가 지나치게 작다면, 이를 6:2:2의 비율로 나눈다고 하더라도 각 train, validation, test set에 할당되는 데이터의 양이 너무 적어 효과적으로 모델을 학습하고 검증하는데에 어려움을 겪을 수 있습니다. 이럴때에 사용할 수 있는 다양한 dataset splitting 기법들이 존재하지만, 여기서는 k-fold 기법에 대해 알아보겠습니다. 
 
-![k_fold.jpg](/assets/img/train_val_test/k_fold.jpg)
+![k_fold.jpg](/assets/images/Dataset_Splitting/k_fold.jpg)
 
 
 - 위의 figure에서 보이는 것과 같이 전체 dataset을 k-1 번 접어주면(fold) k 개의 fold로 분할될 것입니다. 위의 예시는 데이터셋을 4번 접어서 5-fold dataset을 만들어 준 경우입니다.(대다수의 경우에는 5-fold, 또는 10-fold를 사용합니다) 
@@ -87,7 +87,7 @@ description: Dataset Splitting summary
 
 - 머신러닝과 딥러닝은 최근 정말 다양한 분야에 활용되고 있기 때문에, 우리는 다양한 종류와 각기 다른 성질을 가진 데이터를 다루게 되었습니다. 그래서 우리가 어떠한 데이터를 가지고 모델을 개발 할 것 인지에 따라서 dataset splitting 하는 방식이 조금씩 달라질 수 있습니다. 
 
-![data_type.jpg](/assets/img/train_val_test/data_type.jpg)
+![data_type.jpg](/assets/images/Dataset_Splitting/data_type.jpg)
 
 - 위에서 보여지는 다양한 데이터의 특성들 중 시계열 데이터로 예시를 들어보겠습니다. 우리가 만들고자 하는 모델이 주가를 예측하는 모델이라고 가정해 보겠습니다. 주가는 시간의 흐름에 따라 변할 것이고, 우리가 사용할 데이터 또한 각 시간별 주가가 저장된 데이터셋일 것 입니다. 이렇게 데이터의 순서가 의미있고 중요한 데이터를 시계열 데이터라고 부릅니다. 이와 같이 순서가 중요한 데이터를 다루는데, dataset splitting을 한다고 데이터를 무작위로 섞어버린다면 우리의 모델이 의미있는 학습을 하는것은 불가능해지겠죠? 그래서 이렇게 시계열 데이터를 사용하여 모델을 학습시킨다고 한다면, 데이터를 random 하게 섞지 않고, 시간의 흐름에 따라 달라지는 데이터를 모델이 학습할 수 있도록 해 주어야 합니다.  
 - 여기서는 시계열 데이터를 예시로 들었지만, 시계열 데이터 뿐만 아니라 다양한 데이터와 그의 성질에 따라 필요로 하는 dataset splitting 방법이 조금씩 달라질 수 있습니다. 따라서 데이터셋을 분할할때에 우리가 다루는 데이터는 어떤 성질을 가지고 있는지 고려할 필요가 있습니다. 
@@ -126,7 +126,7 @@ description: Dataset Splitting summary
 - 그렇다면 우리가 모델을 통해 해결하고자 하는 문제에 따라 적절한 evaluation metric이 조금씩 달라질 수 있겠죠? 다양한 machine learning의 분야, 그리고 task에 따라 흔히, 또는 대표적으로 사용되는 evaluation metric을 아래의 테이블을 통해 간단하게 소개해드리도록 하겠습니다. 
 
 
-![eval_metrics.jpg](/assets/img/train_val_test/eval_metrics.jpg)
+![eval_metrics.jpg](/assets/images/Dataset_Splitting/eval_metrics.jpg)
 
 
 - 우리가 만든 모델이 실제로 사용되었을때 얼마나 성공적일지 잘 보여주는 evaluation metric 을 잘 세웠다고 가정했을때, 이런 evaluation metric에 따른 결과가 좋지 않다면, dataset splitting을 효과적으로 했는지 다시한번 확인해 보는 것 또한 좋은 방법입니다. 데이터셋 분할이 효과적이고 적합하게 이루어지지 않았다고 판단된다면, 데이터셋을 다시 분할하여 사용하는 것 또한 모델의 성능을 향상시키는데에 도움이 될 수 있습니다. 
