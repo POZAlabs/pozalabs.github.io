@@ -126,7 +126,7 @@ description: Dataset Splitting summary
 - 그렇다면 우리가 모델을 통해 해결하고자 하는 문제에 따라 적절한 evaluation metric이 조금씩 달라질 수 있겠죠? 다양한 machine learning의 분야, 그리고 task에 따라 흔히, 또는 대표적으로 사용되는 evaluation metric을 아래의 테이블을 통해 간단하게 소개해드리도록 하겠습니다. 
 
 
-![eval_metrics.jpg](/assets/images/Dataset_Splitting/eval_metrics.jpg)
+![eval_metric.jpg](/assets/images/Dataset_Splitting/eval_metric.jpg)
 
 
 - 우리가 만든 모델이 실제로 사용되었을때 얼마나 성공적일지 잘 보여주는 evaluation metric 을 잘 세웠다고 가정했을때, 이런 evaluation metric에 따른 결과가 좋지 않다면, dataset splitting을 효과적으로 했는지 다시한번 확인해 보는 것 또한 좋은 방법입니다. 데이터셋 분할이 효과적이고 적합하게 이루어지지 않았다고 판단된다면, 데이터셋을 다시 분할하여 사용하는 것 또한 모델의 성능을 향상시키는데에 도움이 될 수 있습니다. 
