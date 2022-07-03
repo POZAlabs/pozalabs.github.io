@@ -1,5 +1,5 @@
 ---
-title: “Train, Validation, and Test Set”
+title: Train, Validation, and Test Set
 layout: post
 date: 2022-07-01
 headerImage: False
