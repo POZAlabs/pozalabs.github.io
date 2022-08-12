@@ -1,3 +1,22 @@
+---
+title: "Vanishing Gradient"
+layout: post
+date: 2022-08-12
+image: /assets/images/Activation_function/tanh.png
+headerImage: False
+tag:
+- Backpropagation
+- Vanishing Gradient
+- LSTM
+- Activation Function
+- Logistic Regression
+//star: true
+category: blog
+author: jesung
+description: Vanishing Gradient summary
+---
+
+
 ### Summary : 
 이번 시간에는 지난 시간에 다뤄 보았던 [Activation Function(활성함수)](https://pozalabs.github.io/Activation_Function/)과 관련된 이야기를 해 보려고 합니다.
 지난 시간에는 활성함수 그 자체가 가지는 의미와 종류에 대해 알아보았다면, 인공신경망의 학습을 방해하는 Vanishing Gradient(Exploding gradient)에 초점을 맞추어 그 원인과 해결 방법에 대해 한번 파헤쳐보도록 하겠습니다!
