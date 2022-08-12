@@ -13,16 +13,17 @@
 ### Gradient는 어떻게 계산되는 건가요?(Backpropagation)
 아래 그림은 **Backpropagation**과정을 담은 모식도입니다. 2개의 node(neuron)로부터 output을 내는 node를 거치고, Loss 값이 계산되는 구조인 Feed-Forward network의 일부라고 생각하면 됩니다. Feed-forward Network란 여러 layer로 이루어진 딥러닝의 일반적인 network를 의미한다고 이해하면 됩니다.  
 ![](https://velog.velcdn.com/images/crosstar1228/post/23008203-94aa-4cde-9ea6-f80170533507/image.png)
+
  모델로 들어간 input은 여러 layer를 거쳐 마지막 f1 함수와 특정 activation function을 거쳐 z라는 output을 갖게 됩니다. 이 z는 특정 objective function(목적 함수)에 의해 Loss값이 계산되고, 이 Loss 값의 gradient(편미분 값에 의한) 계산을 통해 backpropagation이 시작되죠.
 여기서 Objective Function이란, 우리가 더 학습이 잘 되도록 최적화(optimize)하는, 말 그대로 목적이 되는 함수를 의미합니다. 
 그렇다고 한다면, 아래 **f1 함수를 포함한 마지막 노드를 기준**으로 하여, 오른쪽에서 다가오는 값은 **upstream gradient**,그리고 내부에서 계산되는 z에 대한 x와 y의 gradient 값은 **local gradient**가 됩니다.
 그리고 이 **upstream gradient**와 **local gradient**값을 곱하여 **downstram gradient** 값을 구할 수 있게 되는 데, 이것이 역방향으로의 gradient를 구하는 backpropagation의 과정으로 설명이 가능합니다.(이 과정에서 Chain Rule이 적용이 됩니다.)
 다시 말해, 위와 같은 방법으로 Loss 의 초기 input 값들에 대한 gradient(정답과 멀어져있는 정도)값들을 계산할 수 있게 되고, 그 값만큼(멀어져있는 만큼)을 곱하여 parameter를 update하게 되는 것이죠!
 
-여기서 잠깐, gradient는 벡터의 특정 변수에 대한 편미분값이자 변화율을 의미합니다. 이 상황에서는 input 벡터에 대한 Loss(output)의 변화율인 것이죠.
+ 여기서 잠깐, gradient는 벡터의 특정 변수에 대한 편미분값이자 변화율을 의미합니다. 이 상황에서는 input 벡터에 대한 Loss(output)의 변화율인 것이죠.
 쉽게 말해 **input과 관련해서 Loss가 변한 정도**라고 이야기할 수 있겠네요! 더 깊은 수학적인 개념 편미분과 Chain Rule을 키워드로 추가 검색 및 공부를 추천드립니다.
 
-정라하자면, **input을 모델에 넣고, 여러 함수(layer)를 거쳐 Loss를 계산하고, 변화율만큼 parameter를 update해준다** 라고 직관을 얻을 수 있을 것 같습니다.
+ 정라하자면, **input을 모델에 넣고, 여러 함수(layer)를 거쳐 Loss를 계산하고, 변화율만큼 parameter를 update해준다** 라고 직관을 얻을 수 있을 것 같습니다.
 
 ### 그렇다면 Vanishing gradient는 어떻게 발생하나요?
 그렇다면 Vanishing gradient는 어떻게 발생하는 걸까요? 답은 간단합니다. 
@@ -63,6 +64,7 @@ layer가 깊다면, 중간 layer들의 parameter는 제대로 update될지 몰�
 ### 해결 방법
 #### 1) ReLU & LeakyReLU : gradient값이 0이 되지 않는 activation function을 사용하자
 ![](https://velog.velcdn.com/images/crosstar1228/post/8049487a-de51-4e87-ae55-18baebed6b84/image.png)
+
  그림과 같은 다른 activation function을 활용하는 것이 기본적으로 vanishing gradient 문제를 해결하는 데에 도움이 됩니다. 
 ReLU 함수는 input이 커져도 gradient 값이 1로 대응되기 때문에, Loss 값을 보다 잘 보존할 수 있게 됩니다. 하지만 음수 값이 input으로 들어올 경우, 
 값이 0으로 대응되어 회복되지 않는 dying RELU 현상이 일어나기 때문에 오른쪽 그림과 같은 Leaky ReLU로 보완하는 방법도 있습니다. 
@@ -78,7 +80,7 @@ LSTM에 대한 자세한 내용은 논문을 비롯한 다양한 연구 자료�
 
  인공신경망, 특히 Computer Vision의 핵심 모델인 CNN(Convolutional Neural Network)의 발전 과정 중, layer수가 늘어날수록 오히려 학습이 제대로 진행되지 않는 현상이 발생하여 고안된 방법론입니다.
 [ResNet](https://arxiv.org/abs/1512.03385)이 학계에 가져온 혁신에 비해 원리는 매우 간단합니다. gradient를 0으로 만드는 것은 대부분 activation function을 거친 이후이기 때문에, input으로 들어오던 x를 layer를 거친 F(x)(함수의 output)와 더해주어 output을 산출합니다(그림 참고). 
-결과적으로 $$F(x)$$ 값이 0과 가까워져도, $$x$$ 값이 남아있어 gradient값을 적정하게 유지시켜주는 역할을 하는 것입니다. 
+결과적으로 F(x) 값이 0과 가까워져도, x 값이 남아있어 gradient값을 적정하게 유지시켜주는 역할을 하는 것입니다. 
 
 
 #### 4) Proper Weight initialization : 초깃값을 적절히 설정하자
@@ -109,6 +111,7 @@ batch normalization은 신경망의 node들의 input의 distribution을 조정�
 1. Vanishing Gradient는 Gradient값이 유지되지 않아 parameter가 제대로 update되지 않는 현상을 의미합니다. 
 2. 주로 Backpropagation에서 activation function의 영향으로 인해 Gradient가 소실되는 경우가 많습니다. 
 3. Activation function을 보완하고, 초깃값을 재설정하고, 분포를 조정하고, 새로운 모델 및 기법을 활용하는 등 다양한 방법으로 vanishing gradient를 해결 가능합니다.
+
 이외에도 Exploding Gradient를 막기 위한 Gradient Clipping 기법 등 다양한 방법을 시도하여 gradient를 적절히 유지할 수 있습니다. 
 그리고 실무에서는 이러한 문제점을 보완하기 위해 pretrained model을 활용하고 목적에 맞게 customizing하는 경우도 많이 찾아볼 수 있습니다.
 인공신경망은 어렵지만, 그래도 gradient를 유지하는 다양한 방법들을 고민해 보며 성능을 개선시킨다면 더 매력을 느낄 수 있을 겁니다!
