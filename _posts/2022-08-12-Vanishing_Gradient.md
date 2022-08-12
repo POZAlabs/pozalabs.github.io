@@ -107,7 +107,7 @@ batch normalization은 신경망의 node들의 input의 distribution을 조정�
 
 
 ### Conclusion
- 이번 시간에는 Vanishing/Exploding Gradient가 일어나는 원리와 그 해결 방안에 대해 알아보있습니다.
+ 이번 시간에는 Vanishing/Exploding Gradient가 일어나는 원리와 그 해결 방안에 대해 알아보았습니다.
 1. Vanishing Gradient는 Gradient값이 유지되지 않아 parameter가 제대로 update되지 않는 현상을 의미합니다. 
 2. 주로 Backpropagation에서 activation function의 영향으로 인해 Gradient가 소실되는 경우가 많습니다. 
 3. Activation function을 보완하고, 초깃값을 재설정하고, 분포를 조정하고, 새로운 모델 및 기법을 활용하는 등 다양한 방법으로 vanishing gradient를 해결 가능합니다.
